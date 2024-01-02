@@ -6,9 +6,14 @@ CurrentModule = NumericalMethods
 
 Documentation for [NumericalMethods](https://github.com/jmanthony3/NumericalMethods.jl).
 
-```@index
+```@contents
 ```
 
+## Functions
 ```@autodocs
-Modules = [NumericalMethods]
+Modules = [FiniteElementAnalysis]
+```
+
+## Index
+```@index
 ```
