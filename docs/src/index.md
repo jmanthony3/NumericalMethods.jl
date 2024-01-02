@@ -11,7 +11,7 @@ Documentation for [NumericalMethods](https://github.com/jmanthony3/NumericalMeth
 
 ## Functions
 ```@autodocs
-Modules = [FiniteElementAnalysis]
+Modules = [NumericalMethods]
 ```
 
 ## Index
