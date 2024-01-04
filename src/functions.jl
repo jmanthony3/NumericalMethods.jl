@@ -3,185 +3,8 @@ using Polynomials
 using Statistics
 using Symbolics
 
-"""
-    linearleastsquares(domain, f, degree::Integer)
-
-Construct a polynomial of some degree while minimizing the least squares error.
-
-# Notes
-Least squares error := ``E = \\sum_{i=1}^{m}[y_{i} - P_{n}(x_{i})]^{2}``
-
-Constructed polynomial of the form: ``P(x) = a_{n}x^{n} + a_{n - 1}x^{n - 1} + \\dots + a_{1}x + a_{0}``
-"""
-function linearleastsquares(
-    domain  ::T,
-    f       ::T,
-    degree  ::Integer
-) where {T<:AbstractVector}
-    X, Y            = domain, f
-    m               = length(X)
-    A, b            = zeros((degree+1, degree+1)), zeros(degree+1)
-    for i ∈ 0:1:degree
-        for j ∈ 0:1:degree
-            for k ∈ 1:1:m
-                A[i+1,j+1] += X[k]^(i + j)
-            end
-        end
-        for j ∈ 1:1:m
-            b[i+1] += Y[j]*X[j]^i
-        end
-    end
-    @variables t
-    x, polynomial   = A\b, 0
-    for i ∈ 0:1:degree
-        polynomial += x[i+1]*t^i
-    end
-    polynomial      = build_function(polynomial, t, expression=Val{false})
-    error           = sum((Y - polynomial.(X)).^2)
-    return polynomial, error
-end
-
-"""
-    linearleastsquares(domain, f, type::Symbol)
-
-Given a domain and range, yield the coefficients for an equation and the equation of the form ``y = ax^{b}``.
-"""
-function linearleastsquares(
-    domain  ::T,
-    f       ::T,
-    type    ::Symbol
-) where {T<:AbstractVector}
-    if type == :power
-        X, Y            = domain, f
-        m               = length(X)
-        q1, q2, q3, q4  = [], [], [], []
-        for i ∈ 1:1:m
-            push!(q1, log(X[i])*log(Y[i]))
-            push!(q2, log(X[i]))
-            push!(q3, log(Y[i]))
-            push!(q4, log(X[i])^2)
-        end
-        num             = m*sum(q1) - sum(q2)*sum(q3)
-        den             = m*sum(q4) - (sum(q2))^2
-        b               = num / den
-        a               = exp((sum(q3) - b*sum(q2)) / m)
-        expression(x)   = a*(x^b)
-        error           = sum((Y - expression.(X)) .^ 2)
-        return expression, error
-    end
-end
-
-"""
-    newtondifference(x, f, α[; var::Symbol=:x, dir::Symbol=:auto])
-
-Given a domain and range, construct some polynomial by Newton's Divided Difference.
-`'forward'` or `'backward'` construction. Will be chosen automatically if not specified.
-
-# Notes
-Direction will be chosen if not specified.
-Polynomials best made with even spacing in `domain`; although, this is not completely necessary.
-"""
-function newtondifference(
-    x   ::AbstractVector,
-    f   ::AbstractVector,
-    α   ::Real;
-    var ::Symbol        = :x,
-    dir ::Symbol        = :auto
-)
-    if dir == :auto
-        dir = (α <= median(x) ? :forward : :backward)
-    end
-    fterm(g, i ,j) = (g[i, j] - g[i - 1, j]) / (g[i, 1] - g[i - (j - 1), 1])
-    m, n = length(x), length(x) + 1
-    fxn, coeff = zeros((m, n)), []
-    fxn[:, 1], fxn[:, 2] = x, f
-    for j ∈ 2:1:m
-        for i ∈ j:1:m
-            # println((i, j))
-            fₖ = fterm(fxn, i, j)
-            fxn[i, j + 1] = fₖ
-            if dir == :forward && i == j
-                # println((i, j, fₖ))
-                push!(coeff, fₖ)
-            elseif dir == :backward && i == m
-                # println((i, j, fₖ))
-                push!(coeff, fₖ)
-            end
-        end
-    end
-    @variables t
-    k, g, terms = (dir == :forward ? 1 : m), 0., 1.
-    for c ∈ coeff
-        terms  *= (t - x[k])
-        g      += c * prod(terms)
-        k      += (dir == :forward ? 1 : -1)
-    end
-    p = g + (dir == :forward ? f[begin] : f[end])
-    return build_function(p, t, expression=Val{false})
-end
-
-"""
-    clamped(domain, f, function_derivative)
-
-The bookend polynomials will have the same slope entering and exiting the interval as the derivative at the respective endpoint.
-"""
-function clamped(
-    domain              ::T,
-    f                   ::T,
-    function_derivative ::T
-)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
-    function _algorithm(g, gp)
-        Y, YP           = g, gp
-        m, n            = length(Y), length(Y) - 1
-        # STEP 1:   build list, h_i
-        H               = zeros(n)
-        for i ∈ 1:1:n
-            H[i] = X[i+1] - X[i]
-        end
-        # STEP 2:   define alpha list endpoints
-        A, AP, ALPHA    = Y, YP, zeros(m)
-        ALPHA[1]        = 3*(A[2] - A[1])/H[1] - 3*AP[1]
-        ALPHA[m]        = 3*AP[m] - 3*(A[m] - A[n])/H[n]
-        # STEP 3:   build list, alpha_i
-        for i ∈ 2:1:n
-            ALPHA[i] = 3/H[i]*(A[i+1] - A[i]) - 3/H[i-1]*(A[i] - A[i-1])
-        end
-        # Algorithm 6.7 to solve tridiagonal
-        # STEP 4:   define l, mu, and z first points
-        L, MU, Z, C     = zeros(m), zeros(m), zeros(m), zeros(m)
-        L[1], MU[1]     = 2*H[1], 0.5
-        Z[1]            = ALPHA[1]/L[1]
-        # STEP 5:   build lists l, mu, and z
-        for i ∈ 2:1:n
-            L[i]  = 2*(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
-            MU[i] = H[i]/L[i]
-            Z[i]  = (ALPHA[i] - H[i-1]*Z[i-1])/L[i]
-        end
-        # STEP 6:   define l, z, and c endpoints
-        L[m]            = H[n]*(2-MU[n])
-        Z[m]            = (ALPHA[m] - H[n]*Z[n])/L[m]
-        C[m]            = Z[m]
-        # STEP 7:   build lists c, b, and d
-        B, D = zeros(n), zeros(n)
-        for i ∈ 0:1:n-1
-            j    = n-i
-            C[j] = Z[j] - MU[j]*C[j+1]
-            B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2*C[j])/3
-            D[j] = (C[j+1] - C[j])/(3*H[j])
-        end
-        return Y, A, B, C, D
-    end
-    g, X, gp        = f, domain, function_derivative
-    Y, A, B, C, D   = _algorithm(g, gp)
-    n, splines      = length(X) - 1, []
-    for j ∈ 1:1:n
-        xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
-        sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
-        push!(splines, sj)
-    end
-    return Y, splines
-end
-
+# Ch. 3 (p. 103)
+## 3.1 (p. 104)
 """
     lagrange()
 
@@ -270,6 +93,195 @@ function lagrange(
     # return polynomial
 end
 
+## 3.3 (p. 122)
+"""
+    newtondifference(x, f, α[; var::Symbol=:x, dir::Symbol=:auto])
+
+Given a domain and range, construct some polynomial by Newton's Divided Difference.
+`'forward'` or `'backward'` construction. Will be chosen automatically if not specified.
+
+# Notes
+Direction will be chosen if not specified.
+Polynomials best made with even spacing in `domain`; although, this is not completely necessary.
+"""
+function newtondifference(
+    x   ::AbstractVector,
+    f   ::AbstractVector,
+    α   ::Real;
+    var ::Symbol        = :x,
+    dir ::Symbol        = :auto
+)
+    if dir == :auto
+        dir = (α <= median(x) ? :forward : :backward)
+    end
+    fterm(g, i ,j) = (g[i, j] - g[i - 1, j]) / (g[i, 1] - g[i - (j - 1), 1])
+    m, n = length(x), length(x) + 1
+    fxn, coeff = zeros((m, n)), []
+    fxn[:, 1], fxn[:, 2] = x, f
+    for j ∈ 2:1:m
+        for i ∈ j:1:m
+            # println((i, j))
+            fₖ = fterm(fxn, i, j)
+            fxn[i, j + 1] = fₖ
+            if dir == :forward && i == j
+                # println((i, j, fₖ))
+                push!(coeff, fₖ)
+            elseif dir == :backward && i == m
+                # println((i, j, fₖ))
+                push!(coeff, fₖ)
+            end
+        end
+    end
+    @variables t
+    k, g, terms = (dir == :forward ? 1 : m), 0., 1.
+    for c ∈ coeff
+        terms  *= (t - x[k])
+        g      += c * prod(terms)
+        k      += (dir == :forward ? 1 : -1)
+    end
+    p = g + (dir == :forward ? f[begin] : f[end])
+    return build_function(p, t, expression=Val{false})
+end
+
+## 3.5 (p. 142)
+"""
+    natural(domain, f, function_derivative)
+
+The bookend polynomials do not assume the slope entering and exiting the interval as the derivative at the respective endpoint.
+"""
+function natural(
+    domain              ::T,
+    f                   ::T
+)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
+    function _algorithm(g)
+        Y               = g
+        m, n            = length(Y), length(Y) - 1
+        # STEP 1:   build list, h_i
+        H               = zeros(n)
+        for i ∈ 1:1:n
+            H[i] = X[i+1] - X[i]
+        end
+        # STEP 2:   build list, alpha_i
+        A, ALPHA        = Y, zeros(m)
+        # ALPHA[1]        = 3*(A[2] - A[1])/H[1] - 3*AP[1]
+        # ALPHA[m]        = 3*AP[m] - 3*(A[m] - A[n])/H[n]
+        for i ∈ 2:1:n
+            ALPHA[i] = 3/H[i]*(A[i+1] - A[i]) - 3/H[i-1]*(A[i] - A[i-1])
+        end
+        # Algorithm 6.7 to solve tridiagonal
+        # STEP 3:   define l, mu, and z first points
+        L, MU, Z, C     = zeros(m), zeros(m), zeros(m), zeros(m)
+        L[1], MU[1], Z[1]= 1., 0, 0.
+        # STEP 4:   build lists l, mu, and z
+        for i ∈ 2:1:n
+            L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
+            MU[i] = H[i] / L[i]
+            Z[i]  = (ALPHA[i] - H[i-1]*Z[i-1]) / L[i]
+        end
+        # STEP 5:   define l, z, and c endpoints
+        L[m], Z[m], C[m]= 1., 0., 0.
+        # STEP 6:   build lists c, b, and d
+        B, D = zeros(n), zeros(n)
+        for i ∈ 0:1:n-1
+            j    = n-i
+            C[j] = Z[j] - MU[j]*C[j+1]
+            B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2C[j])/3
+            D[j] = (C[j+1] - C[j]) / 3H[j]
+        end
+        return Y, A, B, C, D
+    end
+    g, X            = f, domain
+    Y, A, B, C, D   = _algorithm(g)
+    n, splines      = length(X) - 1, []
+    for j ∈ 1:1:n
+        xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
+        sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
+        push!(splines, sj)
+    end
+    return Y, splines
+end
+
+"""
+    clamped(domain, f, function_derivative)
+
+The bookend polynomials will have the same slope entering and exiting the interval as the derivative at the respective endpoint.
+"""
+function clamped(
+    domain              ::T,
+    f                   ::T,
+    function_derivative ::T
+)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
+    function _algorithm(g, gp)
+        Y, YP           = g, gp
+        m, n            = length(Y), length(Y) - 1
+        # STEP 1:   build list, h_i
+        H               = zeros(n)
+        for i ∈ 1:1:n
+            H[i] = X[i+1] - X[i]
+        end
+        # STEP 2:   define alpha list endpoints
+        A, AP, ALPHA    = Y, YP, zeros(m)
+        ALPHA[1]        = 3(A[2] - A[1])/H[1] - 3AP[1]
+        ALPHA[m]        = 3AP[m] - 3(A[m] - A[n])/H[n]
+        # STEP 3:   build list, alpha_i
+        for i ∈ 2:1:n
+            ALPHA[i] = 3/H[i]*(A[i+1] - A[i]) - 3/H[i-1]*(A[i] - A[i-1])
+        end
+        # Algorithm 6.7 to solve tridiagonal
+        # STEP 4:   define l, mu, and z first points
+        L, MU, Z, C     = zeros(m), zeros(m), zeros(m), zeros(m)
+        L[1], MU[1]     = 2H[1], 0.5
+        Z[1]            = ALPHA[1]/L[1]
+        # STEP 5:   build lists l, mu, and z
+        for i ∈ 2:1:n
+            L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
+            MU[i] = H[i]/L[i]
+            Z[i]  = (ALPHA[i] - H[i-1]*Z[i-1])/L[i]
+        end
+        # STEP 6:   define l, z, and c endpoints
+        L[m]            = H[n] * (2 - MU[n])
+        Z[m]            = (ALPHA[m] - H[n]*Z[n]) / L[m]
+        C[m]            = Z[m]
+        # STEP 7:   build lists c, b, and d
+        B, D = zeros(n), zeros(n)
+        for i ∈ 0:1:n-1
+            j    = n-i
+            C[j] = Z[j] - MU[j]*C[j+1]
+            B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2*C[j])/3
+            D[j] = (C[j+1] - C[j]) / 3H[j]
+        end
+        return Y, A, B, C, D
+    end
+    g, X, gp        = f, domain, function_derivative
+    Y, A, B, C, D   = _algorithm(g, gp)
+    n, splines      = length(X) - 1, []
+    for j ∈ 1:1:n
+        xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
+        sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
+        push!(splines, sj)
+    end
+    return Y, splines
+end
+
+## 3.6 (p. 162)
+function bezier(x, y, guide_left, guide_right)
+    n, coeffs_a, coeffs_b = length(x) - 1, [], []
+    for i ∈ 1:1:n
+        a = (x[i],
+            3(guide_left[i, 1] - x[i]),
+            3(x[i] + guide_right[i + 1, 1] - 2guide_left[i, 1]),
+            x[i + 1] - x[i] + 3guide_left[i, 1] - 3guide_right[i + 1, 1])
+        b = (y[i],
+            3(guide_left[i, 2] - y[i]),
+            3(y[i] + guide_right[i + 1, 2] - 2guide_left[i, 2]),
+            y[i + 1] - y[i] + 3guide_left[i, 2] - 3guide_right[i + 1, 2])
+        push!(coeffs_a, a); push!(coeffs_b, b)
+    end
+    return coeffs_a, coeffs_b
+end
+
+# Ch. 4 (p. 171)
+## 4.1 (p. 172)
 function n1derivative(
     x       ::AbstractVector,
     f       ::AbstractVector,
@@ -364,6 +376,7 @@ function midpoint(
     end
 end
 
+## 4.3 (p. 191)
 """
     integrate(f[; rule=:trapezoidal, tol=10^-3])
 
@@ -501,4 +514,74 @@ function integrate(
     tol     ::Real      = 10^-3
 )::AbstractFloat
     return integrate(f, float.(a:h:b), rule=rule, tol=tol)
+end
+
+# Ch. 8 (p. 505)
+## 8.1 (p. 506)
+"""
+    linearleastsquares(domain, f, degree::Integer)
+
+Construct a polynomial of some degree while minimizing the least squares error.
+
+# Notes
+Least squares error := ``E = \\sum_{i=1}^{m}[y_{i} - P_{n}(x_{i})]^{2}``
+
+Constructed polynomial of the form: ``P(x) = a_{n}x^{n} + a_{n - 1}x^{n - 1} + \\dots + a_{1}x + a_{0}``
+"""
+function linearleastsquares(
+    domain  ::T,
+    f       ::T,
+    degree  ::Integer
+) where {T<:AbstractVector}
+    X, Y            = domain, f
+    m               = length(X)
+    A, b            = zeros((degree+1, degree+1)), zeros(degree+1)
+    for i ∈ 0:1:degree
+        for j ∈ 0:1:degree
+            for k ∈ 1:1:m
+                A[i+1,j+1] += X[k]^(i + j)
+            end
+        end
+        for j ∈ 1:1:m
+            b[i+1] += Y[j]*X[j]^i
+        end
+    end
+    @variables t
+    x, polynomial   = A\b, 0
+    for i ∈ 0:1:degree
+        polynomial += x[i+1]*t^i
+    end
+    polynomial      = build_function(polynomial, t, expression=Val{false})
+    error           = sum((Y - polynomial.(X)).^2)
+    return polynomial, error
+end
+
+"""
+    linearleastsquares(domain, f, type::Symbol)
+
+Given a domain and range, yield the coefficients for an equation and the equation of the form ``y = ax^{b}``.
+"""
+function linearleastsquares(
+    domain  ::T,
+    f       ::T,
+    type    ::Symbol
+) where {T<:AbstractVector}
+    if type == :power
+        X, Y            = domain, f
+        m               = length(X)
+        q1, q2, q3, q4  = [], [], [], []
+        for i ∈ 1:1:m
+            push!(q1, log(X[i])*log(Y[i]))
+            push!(q2, log(X[i]))
+            push!(q3, log(Y[i]))
+            push!(q4, log(X[i])^2)
+        end
+        num             = m*sum(q1) - sum(q2)*sum(q3)
+        den             = m*sum(q4) - (sum(q2))^2
+        b               = num / den
+        a               = exp((sum(q3) - b*sum(q2)) / m)
+        expression(x)   = a*(x^b)
+        error           = sum((Y - expression.(X)) .^ 2)
+        return expression, error
+    end
 end
