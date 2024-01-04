@@ -264,20 +264,22 @@ function clamped(
 end
 
 ## 3.6 (p. 162)
-function bezier(x, y, guide_left, guide_right)
-    n, coeffs_a, coeffs_b = length(x) - 1, [], []
+function bezier(x, y, xguides, yguides)
+    n, curves = length(x) - 1, []
     for i ∈ 1:1:n
         a = (x[i],
-            3(guide_left[i, 1] - x[i]),
-            3(x[i] + guide_right[i + 1, 1] - 2guide_left[i, 1]),
-            x[i + 1] - x[i] + 3guide_left[i, 1] - 3guide_right[i + 1, 1])
+            3(xguides[i] - x[i]),
+            3(x[i] + xguides[i + 1] - 2xguides[i]),
+            x[i + 1] - x[i] + 3xguides[i] - 3xguides[i + 1])
         b = (y[i],
-            3(guide_left[i, 2] - y[i]),
-            3(y[i] + guide_right[i + 1, 2] - 2guide_left[i, 2]),
-            y[i + 1] - y[i] + 3guide_left[i, 2] - 3guide_right[i + 1, 2])
-        push!(coeffs_a, a); push!(coeffs_b, b)
+            3(yguides[i] - y[i]),
+            3(y[i] + yguides[i + 1] - 2yguides[i]),
+            y[i + 1] - y[i] + 3yguides[i] - 3yguides[i + 1])
+        xi(t) = sum(a .* (1., t, t^2, t^3))
+        yi(t) = sum(b .* (1., t, t^2, t^3))
+        push!(curves, (x = xi, y = yi))
     end
-    return coeffs_a, coeffs_b
+    return curves
 end
 
 # Ch. 4 (p. 171)
