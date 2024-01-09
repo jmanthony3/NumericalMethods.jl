@@ -351,7 +351,7 @@ function clamped(
     domain              ::T,
     f                   ::T,
     function_derivative ::T
-)::Tuple{AbstractVector, AbstractArray} where {T<:SVector}
+)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
     function _algorithm(g, gp)
         Y, YP           = g, gp
         m, n            = length(Y), length(Y) - 1
