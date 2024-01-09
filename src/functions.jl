@@ -290,17 +290,17 @@ end
 # Ch. 4 (p. 171)
 ## 4.1 (p. 172)
 function n1derivative(
-    x       ::AbstractVector,
-    f       ::AbstractVector,
+    x       ::T,
+    f       ::T,
     j       ::Integer;
     degree  ::Union{Integer, Nothing}   = nothing
-)
+)::AbstractFloat where {T<:SVector}
     @variables t
     Dt = Differential(t)
     function coefficient(xₖ, x)
         num, den = [], []
         for xₗ ∈ x
-            if xₗ != xₖ
+            if isa(xₗ, Num) || xₗ != xₖ
                 push!(num, (t - xₗ))
                 push!(den, (xₖ - xₗ))
             end
