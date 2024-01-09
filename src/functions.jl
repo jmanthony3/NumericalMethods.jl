@@ -484,12 +484,13 @@ end
 
 # Ch. 4 (p. 171)
 ## 4.1 (p. 172)
+
 function n1derivative(
     x       ::T,
     f       ::T,
     j       ::Integer;
     degree  ::Union{Integer, Nothing}   = nothing
-)::AbstractFloat where {T<:SVector}
+)::AbstractFloat where {T<:AbstractVector}
     @variables t
     Dt = Differential(t)
     function coefficient(xₖ, x)
