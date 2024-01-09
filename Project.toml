@@ -7,6 +7,7 @@ version = "0.0.0-dev"
 IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
 IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
 Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 

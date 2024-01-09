@@ -12,16 +12,16 @@ Given a domain and range, construct a Lagrangian polynomial.
 Polynomial will quickly begin to oscillate for larger datasets.
 """
 function lagrange(
-    x       ::AbstractVector,
-    f       ::AbstractVector,
+    x       ::T,
+    f       ::T,
     degree  ::Union{Integer, Nothing}   = nothing
-)
+) where {T<:SVector}
     @variables t
     Dt = Differential(t)
     function coefficient(xₖ, x)
         num, den = [], []
         for xₗ ∈ x
-            if xₗ != xₖ
+            if isa(xₗ, Num) || xₗ != xₖ
                 push!(num, (t - xₗ))
                 push!(den, (xₖ - xₗ))
             end
@@ -29,10 +29,11 @@ function lagrange(
         return prod(num) / prod(den)
     end
     function error(n, ξ, t)
-        roots, g, ξ_error = [], [], []
+        s       = []
+        ξ_error = zeros(MVector{n})
         for i ∈ 1:1:n
-            push!(roots, (t - x[i]))
-            g               = simplify(prod(roots); expand=true)
+            push!(s, t - x[i])
+            g               = simplify(prod(s); expand=true)
             g_eval          = build_function(g, t, expression=Val{false})
             gp              = simplify(expand_derivatives(Dt(g)); expand=true)
             gp_eval         = build_function(gp, t, expression=Val{false})
@@ -72,20 +73,21 @@ function lagrange(
             # println(("\tξ / n!", i, n, ξ / (factorial(n))))
             Dξ = maximum(build_function(ξ, t; expression=Val{false}).(x[begin:i]) ./ (factorial(n)))
             # println((i, n, Dξ, abs(gx)))
-            push!(ξ_error, Dξ * abs(gx))
+            ξ_error[i] = Dξ * abs(gx)
             # xi_err = maximum(xi_error)
             # # println((i, n, xi_err))
         end
         return maximum(abs.(ξ_error))
     end
-    degree = (isnothing(degree) ? length(x) - 1 : degree)
-    terms, errors = [], zeros(length(x))
+    degree  = (isnothing(degree) ? length(x) - 1 : degree)
+    terms   = []
+    errors  = zeros(MVector{degree + 1})
     for k ∈ 1:1:degree + 1
         # println(("degree", k, degree))
         # println(("term", k, term(domain[k], range[k], t)))
         push!(terms, f[k] * coefficient(x[k], t))
         # println(("terms", k, sum(terms)))
-        errors[k] = error(k, sum(terms), t)
+        errors[k]   = error(k, sum(terms), t)
     end
     # return nothing, nothing
     polynomial = build_function(sum(terms), t, expression=Val{false})
@@ -152,17 +154,17 @@ The bookend polynomials do not assume the slope entering and exiting the interva
 function natural(
     domain              ::T,
     f                   ::T
-)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
+)::Tuple{AbstractVector, AbstractArray} where {T<:SVector}
     function _algorithm(g)
         Y               = g
         m, n            = length(Y), length(Y) - 1
         # STEP 1:   build list, h_i
-        H               = zeros(n)
+        H               = zeros(MVector{n})
         for i ∈ 1:1:n
             H[i] = X[i+1] - X[i]
         end
         # STEP 2:   build list, alpha_i
-        A, ALPHA        = Y, zeros(m)
+        A, ALPHA        = Y, zeros(MVector{m})
         # ALPHA[1]        = 3*(A[2] - A[1])/H[1] - 3*AP[1]
         # ALPHA[m]        = 3*AP[m] - 3*(A[m] - A[n])/H[n]
         for i ∈ 2:1:n
@@ -170,7 +172,8 @@ function natural(
         end
         # Algorithm 6.7 to solve tridiagonal
         # STEP 3:   define l, mu, and z first points
-        L, MU, Z, C     = zeros(m), zeros(m), zeros(m), zeros(m)
+        L, MU           = zeros(MVector{m}), zeros(MVector{m})
+        Z, C            = zeros(MVector{m}), zeros(MVector{m})
         L[1], MU[1], Z[1]= 1., 0, 0.
         # STEP 4:   build lists l, mu, and z
         for i ∈ 2:1:n
@@ -181,7 +184,7 @@ function natural(
         # STEP 5:   define l, z, and c endpoints
         L[m], Z[m], C[m]= 1., 0., 0.
         # STEP 6:   build lists c, b, and d
-        B, D = zeros(n), zeros(n)
+        B, D            = zeros(MVector{n}), zeros(MVector{n})
         for i ∈ 0:1:n-1
             j    = n-i
             C[j] = Z[j] - MU[j]*C[j+1]
@@ -210,17 +213,17 @@ function clamped(
     domain              ::T,
     f                   ::T,
     function_derivative ::T
-)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
+)::Tuple{AbstractVector, AbstractArray} where {T<:SVector}
     function _algorithm(g, gp)
         Y, YP           = g, gp
         m, n            = length(Y), length(Y) - 1
         # STEP 1:   build list, h_i
-        H               = zeros(n)
+        H               = zeros(MVector{n})
         for i ∈ 1:1:n
             H[i] = X[i+1] - X[i]
         end
         # STEP 2:   define alpha list endpoints
-        A, AP, ALPHA    = Y, YP, zeros(m)
+        A, AP, ALPHA    = Y, YP, zeros(MVector{m})
         ALPHA[1]        = 3(A[2] - A[1])/H[1] - 3AP[1]
         ALPHA[m]        = 3AP[m] - 3(A[m] - A[n])/H[n]
         # STEP 3:   build list, alpha_i
@@ -229,9 +232,10 @@ function clamped(
         end
         # Algorithm 6.7 to solve tridiagonal
         # STEP 4:   define l, mu, and z first points
-        L, MU, Z, C     = zeros(m), zeros(m), zeros(m), zeros(m)
+        L, MU           = zeros(MVector{m}), zeros(MVector{m})
+        Z, C            = zeros(MVector{m}), zeros(MVector{m})
         L[1], MU[1]     = 2H[1], 0.5
-        Z[1]            = ALPHA[1]/L[1]
+        Z[1]            = ALPHA[1] / L[1]
         # STEP 5:   build lists l, mu, and z
         for i ∈ 2:1:n
             L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
@@ -243,7 +247,7 @@ function clamped(
         Z[m]            = (ALPHA[m] - H[n]*Z[n]) / L[m]
         C[m]            = Z[m]
         # STEP 7:   build lists c, b, and d
-        B, D = zeros(n), zeros(n)
+        B, D            = zeros(MVector{n}), zeros(MVector{n})
         for i ∈ 0:1:n-1
             j    = n-i
             C[j] = Z[j] - MU[j]*C[j+1]
