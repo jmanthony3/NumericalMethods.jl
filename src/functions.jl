@@ -1,5 +1,6 @@
 using IntervalArithmetic, IntervalRootFinding
 using Polynomials
+using StaticArrays
 using Statistics
 using Symbolics
 
