@@ -31,6 +31,15 @@ using Test
     degree  = 2
     @test round(linearleastsquares(x, y, degree)[2], digits=6)      == 0.000873 # ... 6264091126483
 
+    a, b, h = 1., 2.2, 0.3
+    x       = [a:h:b...]
+    y       = [0.7651977, 0.6200860, 0.4554022, 0.2818186, 0.1103623]
+    @test round(newtondifference(x, y, 1.5)(1.5), digits=6)         == 0.511820 # ... 9942386833
+    n = length(x);
+    x = SVector{n, AbstractFloat}(x);
+    y = SVector{n, AbstractFloat}(y);
+    @test round(newtondifference(x, y, 1.5)(1.5), digits=6)         == 0.511820 # ... 9942386833
+
     x       = float.([0,  5,  9, 12, 16, 23, 28])   # days
     y1      = float.([5, 14, 39, 34, 28, 26, 25])   # mg
     y2      = float.([5, 13, 15, 14, 12, 11, 10])   # mg

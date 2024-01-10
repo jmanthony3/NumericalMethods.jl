@@ -192,12 +192,12 @@ Direction will be chosen if not specified.
 Polynomials best made with even spacing in `domain`; although, this is not completely necessary.
 """
 function newtondifference(
-    x   ::AbstractVector,
-    f   ::AbstractVector,
+    x   ::T,
+    f   ::T,
     α   ::Real;
     var ::Symbol        = :x,
     dir ::Symbol        = :auto
-)
+) where {T<:AbstractVector}
     if dir == :auto
         dir = (α <= median(x) ? :forward : :backward)
     end
@@ -216,6 +216,48 @@ function newtondifference(
             elseif dir == :backward && i == m
                 # println((i, j, fₖ))
                 push!(coeff, fₖ)
+            end
+        end
+    end
+    @variables t
+    k, g, terms = (dir == :forward ? 1 : m), 0., 1.
+    for c ∈ coeff
+        terms  *= (t - x[k])
+        g      += c * prod(terms)
+        k      += (dir == :forward ? 1 : -1)
+    end
+    p = g + (dir == :forward ? f[begin] : f[end])
+    return build_function(p, t, expression=Val{false})
+end
+
+function newtondifference(
+    x   ::T,
+    f   ::T,
+    α   ::Real;
+    var ::Symbol        = :x,
+    dir ::Symbol        = :auto
+) where {T<:SVector}
+    if dir == :auto
+        dir = (α <= median(x) ? :forward : :backward)
+    end
+    fterm(g, i ,j) = (g[i, j] - g[i - 1, j]) / (g[i, 1] - g[i - (j - 1), 1])
+    m, n    = length(x), length(x) + 1
+    fxn     = MMatrix{m, n}(zeros((m, n)))
+    coeff   = zeros(MVector{m - 1})
+    fxn[:, 1], fxn[:, 2] = x, f
+    for j ∈ 2:1:m
+        for i ∈ j:1:m
+            # println((i, j))
+            fₖ = fterm(fxn, i, j)
+            fxn[i, j + 1] = fₖ
+            if dir == :forward && i == j
+                # println((i, j, fₖ))
+                # push!(coeff, fₖ)
+                coeff[j - 1] = fₖ
+            elseif dir == :backward && i == m
+                # println((i, j, fₖ))
+                # push!(coeff, fₖ)
+                coeff[j - 1] = fₖ
             end
         end
     end
