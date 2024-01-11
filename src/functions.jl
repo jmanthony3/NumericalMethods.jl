@@ -388,7 +388,9 @@ end
 
 ## 4.3 (p. 191)
 """
-    integrate(f[; rule=:trapezoidal, tol=10^-3])
+    integrate(f, x      [; rule=:trapezoidal, tol=10^-3])
+    integrate(f, a, b, h[; rule=:trapezoidal, tol=10^-3])
+    integrate(f, a, b, n[; rule=:trapezoidal, tol=10^-3])
 
 Find the definite integral by some numerical quadrature.
 
@@ -505,6 +507,17 @@ function integrate(
     f       ::Union{AbstractVector, Function},
     a       ::Real,
     b       ::Real,
+    h       ::Real;
+    rule    ::Symbol    = :trapezoidal,
+    tol     ::Real      = 10^-3
+)::AbstractFloat
+    return integrate(f, float.(a:h:b), rule=rule, tol=tol)
+end
+
+function integrate(
+    f       ::Union{AbstractVector, Function},
+    a       ::Real,
+    b       ::Real,
     n       ::Integer;
     rule    ::Symbol    = :trapezoidal,
     tol     ::Real      = 10^-3
@@ -514,17 +527,6 @@ function integrate(
     else
         integrate(f, float.(a:(b - a)/n:b), rule=rule, tol=tol)
     end
-end
-
-function integrate(
-    f       ::Union{AbstractVector, Function},
-    a       ::Real,
-    b       ::Real,
-    h       ::Real;
-    rule    ::Symbol    = :trapezoidal,
-    tol     ::Real      = 10^-3
-)::AbstractFloat
-    return integrate(f, float.(a:h:b), rule=rule, tol=tol)
 end
 
 # Ch. 5 (p. 259)
