@@ -528,28 +528,37 @@ function integrate(
 end
 
 # Ch. 5 (p. 259)
+"""
+    ODE(f, a, b, h, α, N)
+
+Structure of the boundary conditions to differential equation where `f` is the time derivative of the function to approximate.
+
+# Notes
+Make sure the independent variable is the first argument of `f`!
+"""
 struct ODE
     f   ::Function
     a   ::Real
     b   ::Real
     h   ::Real
     α   ::Real
-    N   ::Real
-    vars::AbstractVector{Num}
+    N   ::Integer
+    # vars::AbstractVector{Num}
 end
 
 """
     ivp(obj::ODE[, tol=10^-3; method=:forward_euler])
 
-Solve Initial-Value Problems (IVP) with boundary conditions defined in `obj` according to `method`.
+Solve `obj` according to `method` ∈ {`:forward_euler` (default), `:backward_euler`, `:improved_euler`, `:modified_euler`, `:runge_kutta`}.
 
-`method` ∈ {`:forward_euler` (default), `:backward_euler`, `:improved_euler`, `:modified_euler`, `:runge_kutta`}.
+# Notes
 Each method has an equivalent convenience function.
+E.g. `ivp(obj; method=:runge_kutta)` ≡ `runge_kutta(obj)`.
 """
 function ivp(obj::ODE, tol=10^-3; method=:forward_euler)
     f       = obj.f
     a, b, h = obj.a, obj.b, obj.h
-    vars    = obj.vars
+    # vars    = obj.vars
     t, w0   = a, obj.α
     ea, eb, λ = 1/2, 1/2, 1
     g       = zeros(MVector{obj.N + 1})

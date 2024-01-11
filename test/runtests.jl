@@ -1,6 +1,5 @@
 using NumericalMethods
 using StaticArrays
-using Symbolics
 using Test
 
 @testset "NumericalMethods.jl" begin
@@ -48,7 +47,6 @@ using Test
     f(t, y) = y - t^2 + 1
     a, b, h = 0., 2., 0.2
     N, α    = 10, 0.5
-    @variables t
-    obj     = ODE(f, a, b, h, α, N, [t])
+    obj     = ODE(f, a, b, h, α, N)
     @test round.(runge_kutta(obj), digits=6) == [0.5, 0.829293, 1.214076, 1.648922, 2.127203, 2.640823, 3.179894, 3.732340, 4.283409, 4.815086, 5.305363]
 end
