@@ -7,16 +7,19 @@ using Symbolics
 # Ch. 3 (p. 103)
 ## 3.1 (p. 104)
 """
-    lagrange()
+    lagrange(x, f[; n=nothing])
 
-Given a domain and range, construct a Lagrangian polynomial.
-Polynomial will quickly begin to oscillate for larger datasets.
+Given a domain, `x` and range, `f`, construct the `n`th Lagrangian polynomial.
+
+# Notes
+If `n=nothing`, then method will utilize entire dataset.
+Polynomials will quickly oscillate for larger datasets.
 """
 function lagrange(
-    x       ::T,
-    f       ::T,
-    degree  ::Union{Integer, Nothing}   = nothing
-) where {T<:AbstractVector}
+    x::T,
+    f::T;
+    n::Union{Integer, Nothing}   = nothing
+)::Tuple{Function, AbstractVector} where {T<:AbstractVector}
     @variables t
     Dt = Differential(t)
     function coefficient(xₖ, x)
@@ -72,35 +75,34 @@ function lagrange(
         end
         return maximum(abs.(ξ_error))
     end
-    degree  = (isnothing(degree) ? length(x) - 1 : degree)
+    n  = (isnothing(n) ? length(x) - 1 : n)
     terms   = []
-    errors  = zeros(MVector{degree + 1})
-    for k ∈ 1:1:degree + 1
+    errors  = zeros(MVector{n + 1})
+    for k ∈ 1:1:n + 1
         push!(terms, f[k] * coefficient(x[k], t))
         errors[k]   = error(k, sum(terms), t)
     end
-    polynomial = build_function(sum(terms), t, expression=Val{false})
-    return polynomial, errors
-    # return polynomial
+    p       = build_function(sum(terms), t, expression=Val{false})
+    return p, errors
 end
 
 ## 3.3 (p. 122)
 """
     newtondifference(x, f, α[; dir::Symbol=:auto])
 
-Given a domain and range, construct some polynomial by Newton's Divided Difference.
-`'forward'` or `'backward'` construction. Will be chosen automatically if not specified.
+Given a domain, `x` and range, `f`, construct some polynomial by Newton's Divided Difference centered around `α`.
+`:forward` or `:backward` construction.
 
 # Notes
 Direction will be chosen if not specified.
-Polynomials best made with even spacing in `domain`; although, this is not completely necessary.
+Polynomials best made with even spacing in `x`; although, this is not completely necessary.
 """
 function newtondifference(
     x   ::T,
     f   ::T,
     α   ::Real;
     dir ::Symbol        = :auto
-) where {T<:AbstractVector}
+)::Function where {T<:AbstractVector}
     if dir == :auto
         dir = (α <= median(x) ? :forward : :backward)
     end
@@ -140,7 +142,7 @@ The bookend polynomials do not assume the slope entering and exiting the interva
 function natural(
     x   ::T,
     f   ::T
-)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
+)::Tuple{AbstractVector, AbstractArray{Function}} where {T<:AbstractVector}
     function _algorithm(g)
         Y               = g
         m, n            = length(Y), length(Y) - 1
@@ -199,7 +201,7 @@ function clamped(
     x   ::T,
     f   ::T,
     fp  ::T
-)::Tuple{AbstractVector, AbstractArray} where {T<:AbstractVector}
+)::Tuple{AbstractVector, AbstractArray{Function}} where {T<:AbstractVector}
     function _algorithm(g, gp)
         Y, YP           = g, gp
         m, n            = length(Y), length(Y) - 1
@@ -254,7 +256,15 @@ function clamped(
 end
 
 ## 3.6 (p. 162)
-function bezier(x, y, xguides, yguides)
+"""
+    bezier(x, y, xguides, yguides)
+
+An application of Hermitic polynomials to draw Bezier curves between points.
+
+# Notes
+Each argument should be a one-to-one mapping of points, (xᵢ, yᵢ) and (xᵢ₊₁, yᵢ₊₁) and their respective guide points, (xᵢ⁺, yᵢ⁺) and (xᵢ₊₁⁻, yᵢ₊₁⁻).
+"""
+function bezier(x::T, y::T, xguides::T, yguides::T)::AbstractArray{Function} where {T<:AbstractVector}
     n, curves = length(x) - 1, []
     for i ∈ 1:1:n
         a = (x[i],
@@ -274,11 +284,19 @@ end
 
 # Ch. 4 (p. 171)
 ## 4.1 (p. 172)
+"""
+    n1derivative(x, f, j[; n=nothing])
+
+The general (n + 1)-point formula to approximate f' at point `j`.
+
+# Notes
+If `n = nothing`, then entire dataset used to construct `n`th Lagrange coefficient.
+"""
 function n1derivative(
-    x       ::T,
-    f       ::T,
-    j       ::Integer;
-    degree  ::Union{Integer, Nothing}   = nothing
+    x::T,
+    f::T,
+    j::Integer;
+    n::Union{Integer, Nothing}   = nothing
 )::AbstractFloat where {T<:AbstractVector}
     @variables t
     Dt = Differential(t)
@@ -292,9 +310,9 @@ function n1derivative(
         end
         return prod(num) / prod(den)
     end
-    degree  = (isnothing(degree) ? length(x) - 1 : degree)
+    n  = (isnothing(n) ? length(x) - 1 : n)
     gp      = 0.
-    for k ∈ 1:1:degree + 1
+    for k ∈ 1:1:n + 1
         Lₖ          = coefficient(x[k], x)
         Lₖp         = simplify(expand_derivatives(Dt(Lₖ)); expand=true)
         Lₖp_eval    = build_function(Lₖp, t, expression=Val{false})
@@ -304,7 +322,7 @@ function n1derivative(
 end
 
 """
-    endpoint(x, f, h, point[, point_type="three"])
+    endpoint(x, f, h, point[; method=:three])
 
 Find the derivative of a bookend point at either `:begin` or `:end` of dataset.
 Acceptable values for `method` include {`:three`, `:five`}.
@@ -343,7 +361,7 @@ function endpoint(
 end
 
 """
-    midpoint(x, f, h, point[, point_type="three"])
+    midpoint(x, f, h, point[; method=:three])
 
 Find the derivative of some point within a dataset.
 Acceptable values for `method` include {`:three`, `:five`, `:2nd`}.
@@ -372,8 +390,9 @@ end
 """
     integrate(f[; rule=:trapezoidal, tol=10^-3])
 
+Find the definite integral by some numerical quadrature.
+
 # Notes
-Find the definite integral by some composite numeric quadrature.
 `f` may be a function or range.
 The domain may be defined with a vector, `x` or on the interval [`a`, `b`] either by number of sub-intervals, `n` or step-size, `h`.
 `rule` accepts {`:trapezoidal` (default), `:midpoint`, `:simpson13`, `:simpson38`, `:simpsonN`}.
@@ -510,22 +529,21 @@ end
 
 # Ch. 5 (p. 259)
 """
-    ODE(f, a, b, h, α, N)
+    ODE(f, a, b, h, α, β, N)
 
-Structure of the boundary conditions to differential equation where `f` is the time derivative of the function to approximate.
+Structure of the boundary conditions to differential equation.
 
 # Notes
-Make sure the independent variable is the first argument of `f`!
+Make sure the independent variable (e.g. time) is the first argument of `f`!
 """
 struct ODE
-    f   ::Function
-    a   ::Real
-    b   ::Real
-    h   ::Real
-    α   ::Real
-    β   ::Real
-    N   ::Integer
-    # vars::AbstractVector{Num}
+    f::Function
+    a::Real
+    b::Real
+    h::Real
+    α::Real
+    β::Real
+    N::Integer
 end
 
 """
@@ -537,7 +555,7 @@ Solve `obj` according to `method` ∈ {`:forward_euler` (default), `:backward_eu
 Each method has an equivalent convenience function.
 E.g. `ivp(obj; method=:runge_kutta)` ≡ `runge_kutta(obj)`.
 """
-function ivp(obj::ODE; tol=10^-3, method=:forward_euler)
+function ivp(obj::ODE; tol=10^-3, method=:forward_euler)::AbstractVector
     f       = obj.f
     t, h, w = obj.a, obj.h, obj.α
     ea, eb, λ = 1/2, 1/2, 1
@@ -575,7 +593,7 @@ runge_kutta(obj;    tol=10^-3) = ivp(obj; tol=tol, method=:runge_kutta)
 """
     linearleastsquares(x, f, n::Integer)
 
-Construct a polynomial of some degree, n while minimizing the least squares error.
+Construct a polynomial of degree, `n` while minimizing the least squares error.
 
 # Notes
 Least squares error := ``E = \\sum_{i=1}^{m}[y_{i} - P_{n}(x_{i})]^{2}``
@@ -583,10 +601,10 @@ Least squares error := ``E = \\sum_{i=1}^{m}[y_{i} - P_{n}(x_{i})]^{2}``
 Constructed polynomial of the form: ``P(x) = a_{n}x^{n} + a_{n - 1}x^{n - 1} + \\dots + a_{1}x + a_{0}``
 """
 function linearleastsquares(
-    x   ::T,
-    f   ::T,
-    n   ::Integer
-) where {T<:AbstractVector}
+    x::T,
+    f::T,
+    n::Integer
+)::Tuple{Function, AbstractFloat} where {T<:AbstractVector}
     X, Y    = x, f
     m       = length(X)
     A       = MMatrix{n+1, n+1}(zeros((n+1, n+1)))
@@ -607,12 +625,12 @@ function linearleastsquares(
         p  += x[i+1]*t^i
     end
     p       = build_function(p, t, expression=Val{false})
-    error   = sum((Y - p.(X)).^2)
+    error   = sum((Y - p.(X)) .^ 2)
     return p, error
 end
 
 """
-    linearleastsquares(domain, f, type::Symbol)
+    linearleastsquares(x, f, type::Symbol)
 
 Given a domain and range, yield the coefficients for an equation and the equation of the form ``y = ax^{b}``.
 """
@@ -620,7 +638,7 @@ function linearleastsquares(
     x       ::T,
     f       ::T,
     type    ::Symbol
-) where {T<:AbstractVector}
+)::Tuple{Function, AbstractFloat} where {T<:AbstractVector}
     if type == :power
         X, Y    = x, f
         m       = length(X)
@@ -640,6 +658,6 @@ function linearleastsquares(
         a       = exp((sum(q3) - b*sum(q2)) / m)
         p(x)    = a*(x^b)
         error   = sum((Y - p.(X)) .^ 2)
-        return p, sum((Y - p.(X)) .^ 2)
+        return p, error
     end
 end
