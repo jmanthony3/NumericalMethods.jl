@@ -549,7 +549,7 @@ struct ODE
 end
 
 """
-    ivp(obj::ODE[, tol=10^-3; method=:forward_euler])
+    ivp(obj::ODE[; tol=10^-3, method=:forward_euler])
 
 Solve `obj` according to `method` ∈ {`:forward_euler` (default), `:backward_euler`, `:improved_euler`, `:modified_euler`, `:runge_kutta`}.
 
