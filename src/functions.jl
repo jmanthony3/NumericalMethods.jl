@@ -7,7 +7,7 @@ using Symbolics
 
 # Ch. 2 (p. 47)
 """
-    SVI(f, a, b, n[, tol=10^-3; g])
+    SVI(f, a, b, n, tol)
 
 Given `f`(`x`) such that `x` ∈ [`a`, `b`], find the root of a single-variable, equation in so many iterations, `n` within tolerance, `tol`.
 
