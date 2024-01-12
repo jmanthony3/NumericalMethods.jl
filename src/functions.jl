@@ -22,7 +22,7 @@ function lagrange(
 )::Tuple{Function, AbstractVector} where {T<:AbstractVector}
     @variables t
     Dt = Differential(t)
-    function coefficient(xₖ, x)
+    function coefficient(xₖ, t)
         num, den = [], []
         for xₗ ∈ x
             if isa(xₗ, Num) || xₗ != xₖ
