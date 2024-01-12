@@ -1,8 +1,268 @@
 using IntervalArithmetic, IntervalRootFinding
 using Polynomials
+using Printf
 using StaticArrays
 using Statistics
 using Symbolics
+
+# Ch. 2 (p. 47)
+"""
+    SVI(f, a, b, n[, tol=10^-3; g])
+
+Given `f`(`x`) such that `x` ∈ [`a`, `b`], find the root of a single-variable, equation in so many iterations, `n` within tolerance, `tol`.
+
+Methods
+-------
+bisection()
+    Search for solution by halving the bounds wherein `a` and `b` initially yield opposite signs in function.
+false_position(p0: float, p1: float)
+    solution bounded by `a` and `b` wherein initial guesses `p0` and `p1` yield opposite signs in function.
+fixed_point(p0: float)
+    Root-finding method to find solution near initial guess.
+newton_raphson(p0: float)
+    Root-finding method to find solution near initial guess.
+secant_method(p0: float, p1: float)
+    Initial guesses `p0` and `p1` must yield opposite signs in function. Solution is NOT bounded by `a` and `b`.
+
+# Notes
+Convergence Rates:
+
+    `newton_raphson` > `secant_method` > `false_position` > `fixed_point` > `bisection`
+"""
+struct SVI
+    f   ::Function
+    a   ::Real
+    b   ::Real
+    n   ::Integer
+    tol ::Real
+end
+
+"""
+    maximumslope(obj::SVI)
+
+Find the greatest value for first derivative of function.
+"""
+function maximumslope(obj::SVI)::AbstractFloat
+    @variables x
+    Dx  = Differential(x)
+    df  = simplify(expand_derivatives(Dx(obj.f(x))); expand=true)
+    df  = build_function(df, x, expression=Val{false})
+    return maximum(abs.(df.(range(obj.a, obj.b, length=1000))))
+end
+
+"""
+    max_iterations(obj, method[, p0=0])
+
+Find greatest integer for maximum iterations within tolerance.
+
+# Notes
+Acceptable values for `method` ∈ {`:bisection`, `:fixed_point`, `:newton_raphson`, `:secant_method`, `:false_position`}.
+Initial guess, `p0` for function solution is not needed for `:bisection` method.
+"""
+function max_iterations(
+    obj     ::SVI,
+    method  ::Symbol,
+    p0      ::Real      = 0.;
+    k       ::Real      = NaN
+)::Integer
+    if method == "bisection"
+        return ceil(-log(obj.tol / (obj.b - obj.a))
+            / log(2))
+    elseif method in ("fixed_point", "newton_raphson", "secant_method", "false_position")
+        return ceil(-log(obj.tol / max(p0 - obj.a, obj.b - p0))
+            / log(k))
+    else
+        error("Method must be: `:bisection`, `:fixed_point`, `:newton_raphson`, `:secant_method`, or `:false_position`.")
+    end
+    # logging.info(f"With the inputs, I will terminate the technique after so many iterations, N = {max_iter}")
+end
+
+## 2.1 (p. 48)
+"""
+    bisection(obj::SVI)
+
+Root-finding method: f(x) = 0.
+Search for solution by halving the bounds wherein `a` and `b` initially yield opposite signs in function.
+
+# Notes
+Relying on the Intermediate Value Theorem (IVT), this is a bracketed, root-finding method.
+This method is rather slow to converge but will always converge to a solution; therefore, is a good starter method.
+"""
+function bisection(obj)
+    f, a, b = obj.f, obj.a, obj.b
+    if f(a)*f(b) < 0    # check if f(a) and f(b) are opposite signs
+        N = obj.n
+        # initialize
+        k = 1
+        g = zeros(MVector{N})
+        r = zeros(MVector{N})
+        g[k], r[k] = f(a), 1.
+        # exit by whichever condition is `true` first
+        while r[k] >= obj.tol && k < N
+            x = (b - a) / 2.
+            p = a + x                           # new value, p
+            f(a)*f(p) > 0 ? (a = p) : (b = p)   # adjust next bounds
+            g[k+1], r[k+1] = p, abs(x)          # error of new value, p
+            k += 1                              # iterate to k + 1
+        end
+        return k <= N ? g[k] : NaN
+    else                # abort if f(a) is not opposite f(b)
+        error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(a = %1.4f) = %1.4f, f(b = %1.4f) = %1.4f]",
+            a, b, f(a), f(b)))
+    end
+end
+
+## 2.2 (p. 55)
+"""
+    fixed_point(obj, p0)
+
+Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
+
+**Use function with lowest slope!**
+
+_Not root-bracketed._
+
+# Notes
+Theorem:
+1) Existence of a fixed-point:
+    If g ∈ C[a,b] and g(x) ∈ C[a, b] for all x ∈ [a, b], then function, g has a fixed point, p ∈ [a, b].
+2) Uniqueness of a fixed point:
+    If g'(x) exists on [a, b] and a positive constant, k < 1 exist with {|g'(x)| ≤ k | x ∈ (a, b)}, then there is exactly one fixed-point, p ∈ [a, b].
+
+Converges by mathcal{O}(text{linear}) if g'(p) ≠ 0, and mathcal{O}(text{quadratic}) if g'(p) = 0 and g''(p) < M, where M = g''(ξ) that is the error function.
+"""
+function fixed_point(obj::SVI, p0::AbstractFloat)::AbstractFloat
+    f, a, b = obj.f, obj.a, obj.b
+    N = obj.n
+    # initialize
+    k = 1
+    g = zeros(MVector{N})
+    r = zeros(MVector{N})
+    g[k], r[k] = f((a + b) / 2.), 1.
+    # exit by whichever condition is `true` first
+    while r[k] >= obj.tol && k < N
+        p = f(p0)                           # new value, p
+        g[k+1], r[k+1] = p, abs((p-p0)/p0)  # error of new value, p
+        p0 = p; k += 1                      # iterate to k + 1
+    end
+    return k <= N ? g[k] : NaN
+end
+
+## 2.3 (p. 66)
+"""
+    newton_raphson(obj, p0)
+
+Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
+
+**Use function with lowest slope!**
+
+_f'(x) ≠ 0_
+
+# Notes
+Not root-bracketed and has trouble with symmetric functions!
+Initial guess, `p0` must be close to real solution; else, will converge to different root or oscillate (if symmetric).
+This method can be viewed as fixed-point iteration.
+
+Technique based on first Taylor polynomial expansion of f about p_{0} (that is `p0`) and evaluated at x = p. |p - p_{0}| is assumed small; therefore, 2^{\text{nd}}-order Taylor term, the error, is small.
+
+Newton-Raphson has quickest convergence rate.
+
+See `fixed_point()` for theorem.
+"""
+function newton_raphson(obj::SVI, p0::AbstractFloat)::AbstractFloat
+    f, a, b = obj.f, obj.a, obj.b
+    # determine form of derivative
+    @variables x
+    Dx  = Differential(x)
+    df  = simplify(expand_derivatives(Dx(f(x))); expand=true)
+    df  = build_function(df, x, expression=Val{false})
+    N = obj.n
+    # initialize
+    k = 1
+    g = zeros(MVector{N})
+    r = zeros(MVector{N})
+    g[k], r[k] = f(a), 1.
+    # exit by whichever condition is TRUE first
+    while r[k] >= obj.tol && k < N
+        p = p0 - (f(p0) / df(p0))           # new value, p
+        g[k+1], r[k+1] = p, abs(p - p0)     # error of new value, p
+        p0 = p; k += 1                      # iterate to k + 1
+    end
+    return k <= N ? g[k] : NaN
+end
+
+"""
+    secant_method(obj, p0, p1)
+
+Attempt root-finding method with initial guesses, `p0` and `p1` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
+
+**Use function with lowest slope!**
+
+_Not root-bracketed._
+
+# Notes
+Method is less computationally expensive than `newton_raphson()` but may converge at slower rate by circumventing need to calculate derivative.
+
+See `fixed_point()` for theorem.
+"""
+function secant_method(obj::SVI, p0::T, p1::T)::AbstractFloat where {T<:AbstractFloat}
+    f, a, b = obj.f, obj.a, obj.b
+    if f(p0)*f(p1) < 0  # check if f(p0) and f(p1) are opposite signs
+        N = obj.n
+        # initialize
+        k = 1
+        g = zeros(MVector{N})
+        r = zeros(MVector{N})
+        g[k], r[k] = f(a), 1.
+        # exit by whichever condition is TRUE first
+        while r[k] >= obj.tol && k < N
+            q0, q1 = f(p0), f(p1)
+            p = p1 - q1*(p1 - p0)/(q1 - q0)     # new value, p
+            g[k+1], r[k+1] = p, (abs(p - p0))   # error of new value
+            p0, p1 = p1, p; k += 1              # iterate to k + 1
+        end
+        return k <= N ? g[k] : NaN
+    else                # abort if f(p0) is not opposite f(p1)
+        error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(p0 = %1.4f) = %1.4f, f(p1 = %1.4f) = %1.4f]",
+            p0, p1, f(p0), f(p1)))
+    end
+end
+
+"""
+    false_position(obj, p0, p1)
+
+Attempt root-finding method with initial guesses, `p0` and `p1` in [a, b] solving the equation g(p) = p via f(p) - p = 0.
+
+**Use function with lowest slope!**
+
+# Notes
+Similar to, but slower to converge than, the `secant_method()` by including a test to ensure solution is root-bracketed.
+
+See `fixed_point()` for theorem.
+"""
+function false_position(obj::SVI, p0::T, p1::T)::AbstractFloat where {T<: AbstractFloat}
+    f, a, b = obj.f, obj.a, obj.b
+    if f(p0)*f(p1) < 0  # check if f(p0) and f(p1) are opposites signs
+        N = obj.n
+        # initialize
+        k = 1
+        g = zeros(MVector{N})
+        r = zeros(MVector{N})
+        g[k], r[k] = f(a), 1.
+        # exit by whichever condition is `true` first
+        while r[k] >= obj.tol && k < N
+            q0, q1 = f(p0), f(p1)
+            p = p1 - q1*(p1 - p0)/(q1 - q0)     # new value, p
+            g[k+1], r[k+1] = p, abs(p - p0)     # error of new value, p
+            f(p)*q1 < 0 ? p0 = p1 : nothing     # adjust next bounds
+            p1 = p; k += 1                      # iterate to k + 1
+        end
+        return k <= N ? g[k] : NaN
+    else                # abort if f(p0) is not opposite f(p1)
+        error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(p0 = %1.4f) = %1.4f, f(p1 = %1.4f) = %1.4f]",
+            p0, p1, f(p0), f(p1)))
+    end
+end
 
 # Ch. 3 (p. 103)
 ## 3.1 (p. 104)
@@ -68,10 +328,10 @@ function lagrange(
             for k ∈ 1:1:i
                 ξ = simplify(expand_derivatives(Dt(ξ)); expand=true)
             end
-            Dξ              = maximum(
+            dξ              = maximum(
                 build_function(ξ, t; expression=Val{false}).(x[begin:i])
                     ./ (factorial(n)))
-            ξ_error[i]      = Dξ * abs(gx)
+            ξ_error[i]      = dξ * abs(gx)
         end
         return maximum(abs.(ξ_error))
     end
@@ -300,7 +560,7 @@ function n1derivative(
 )::AbstractFloat where {T<:AbstractVector}
     @variables t
     Dt = Differential(t)
-    function coefficient(xₖ, x)
+    function coefficient(xₖ, t)
         num, den = [], []
         for xₗ ∈ x
             if isa(xₗ, Num) || xₗ != xₖ
@@ -313,7 +573,7 @@ function n1derivative(
     n  = (isnothing(n) ? length(x) - 1 : n)
     gp      = 0.
     for k ∈ 1:1:n + 1
-        Lₖ          = coefficient(x[k], x)
+        Lₖ          = coefficient(x[k], t)
         Lₖp         = simplify(expand_derivatives(Dt(Lₖ)); expand=true)
         Lₖp_eval    = build_function(Lₖp, t, expression=Val{false})
         gp         += f[k]*Lₖp_eval(x[j])

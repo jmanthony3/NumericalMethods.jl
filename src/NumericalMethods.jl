@@ -1,5 +1,11 @@
 module NumericalMethods
 
+export SVI
+export bisection
+export fixed_point
+export newton_raphson
+export secant_method
+export false_position
 export lagrange
 export newtondifference
 export natural

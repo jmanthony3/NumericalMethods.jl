@@ -4,11 +4,28 @@ using Test
 
 @testset "NumericalMethods.jl" begin
     # Write your tests here.
+    ## single-variable iteration
+    f(x)    = x^3 + 4x^2 - 10
+    a, b, N, tol = 1., 2., 50, 10^-9
+    svi     = SVI(f, a, b, N, tol)
+    @test round(bisection(svi),                     digits=6)       == 1.365230
+    g(x)    = 2 \ √(10 - x^3)
+    svi     = SVI(g, a, b, N, tol)
+    @test round(fixed_point(svi, 1.5),              digits=6)       == 1.365230
+    h(x) = cos(x) - x
+    a, b, N, tol = 0., pi/2., 50, 10^-6
+    svi = SVI(h, a, b, N, tol)
+    @test round(newton_raphson(svi, pi / 4.),       digits=6)       == 0.739085
+    @test round(secant_method(svi, 0.5, pi / 4.),   digits=6)       == 0.739085
+    a, b, N, tol = 0., pi/2., 100, 10^-1
+    svi = SVI(h, a, b, N, tol)
+    @test round(false_position(svi, 0.5, pi / 4.),  digits=6)       == 0.739058
+
     ## interpolation
-    x       = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
-    y       = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
-    degree  = 2
-    @test round(linearleastsquares(x, y, degree)[2],digits=6)       == 0.000873
+    x = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
+    y = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
+    n = 2
+    @test round(linearleastsquares(x, y, n)[2],     digits=6)       == 0.000873
 
     a, b, h = 1., 2.2, 0.3
     x       = [a:h:b...]
@@ -31,7 +48,6 @@ using Test
     h, a, b = 0.25, 1, 2
     x       = [a:h:b...]
     y       = (x .^ 2) .* cos.(x)
-    n       = length(x)
     @test round(n1derivative(x, y, 2), digits=6)                    == -0.690759
     @test round(endpoint(x, y, h, :begin), digits=6)                ==  0.381398
     @test round(midpoint(x, y, h, 2), digits=6)                     == -0.762287
