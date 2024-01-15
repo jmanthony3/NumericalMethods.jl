@@ -164,7 +164,7 @@ bisection(svi::SingleVariableIteration) = solve(svi; method=:bisection)
 
 ## 2.2 (p. 55)
 """
-    fixed_point(svi, p0)
+    fixed_point(svi::SingleVariableIteration, p0)
 
 Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
 
@@ -185,7 +185,7 @@ fixed_point(svi::SingleVariableIteration, p0::Real) = solve(svi; method=:fixed_p
 
 ## 2.3 (p. 66)
 """
-    newton_raphson(svi, p0[; df::Union{Nothing, Function}=nothing])
+    newton_raphson(svi::SingleVariableIteration, p0[; df=nothing])
 
 Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0. `df` will be the first derivative of function if not given.
 
@@ -207,7 +207,7 @@ newton_raphson(svi::SingleVariableIteration, p0::Real;
 ) = solve(svi; method=:newton_raphson, p0=p0, df=df)
 
 """
-    secant_method(svi, p0, p1)
+    secant_method(svi::SingleVariableIteration, p0, p1)
 
 Attempt root-finding method with initial guesses such that `p0` and `p1` in [a, b] yield opposite signs in function.
 
@@ -224,7 +224,7 @@ secant_method(svi::SingleVariableIteration, p0::Real, p1::Real
 ) = solve(svi; method=:secant_method, p0=p0, p1=p1)
 
 """
-    false_position(svi, p0, p1)
+    false_position(svi::SingleVariableIteration, p0, p1)
 
 Attempt root-finding method with initial guesses such that `p0` and `p1` in [a, b] yield opposite signs in function.
 
