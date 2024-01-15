@@ -7,18 +7,18 @@ using Test
     ## single-variable iteration
     f(x)    = x^3 + 4x^2 - 10
     a, b, N, tol = 1., 2., 50, 10^-9
-    svi     = SVI(f, a, b, N, tol)
+    svi     = SingleVariableIteration(f, a, b, N, tol)
     @test round(bisection(svi),                     digits=6)       == 1.365230
     g(x)    = 2 \ √(10 - x^3)
-    svi     = SVI(g, a, b, N, tol)
+    svi     = SingleVariableIteration(g, a, b, N, tol)
     @test round(fixed_point(svi, 1.5),              digits=6)       == 1.365230
     h(x) = cos(x) - x
     a, b, N, tol = 0., pi/2., 50, 10^-6
-    svi = SVI(h, a, b, N, tol)
+    svi = SingleVariableIteration(h, a, b, N, tol)
     @test round(newton_raphson(svi, pi / 4.),       digits=6)       == 0.739085
     @test round(secant_method(svi, 0.5, pi / 4.),   digits=6)       == 0.739085
     a, b, N, tol = 0., pi/2., 100, 10^-1
-    svi = SVI(h, a, b, N, tol)
+    svi = SingleVariableIteration(h, a, b, N, tol)
     @test round(false_position(svi, 0.5, pi / 4.),  digits=6)       == 0.739058
 
     ## interpolation
@@ -63,6 +63,10 @@ using Test
     f(t, y) = y - t^2 + 1
     a, b, h = 0., 2., 0.2
     N, α, β = 10, 0.5, NaN
-    obj     = ODE(f, a, b, h, α, β, N)
-    @test round.(runge_kutta(obj), digits=6) == [0.5, 0.829293, 1.214076, 1.648922, 2.127203, 2.640823, 3.179894, 3.732340, 4.283409, 4.815086, 5.305363]
+    ivp     = InitialValueProblem(f, a, b, h, α, N)
+    @test round.(runge_kutta(ivp),                  digits=6)       == [
+        0.5,        0.829293,   1.214076,
+        1.648922,   2.127203,   2.640823,
+        3.179894,   3.732340,   4.283409,
+        4.815086,   5.305363]
 end

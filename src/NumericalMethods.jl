@@ -1,6 +1,7 @@
 module NumericalMethods
 
-export SVI
+export SingleVariableIteration
+export solve
 export bisection
 export fixed_point
 export newton_raphson
@@ -15,8 +16,7 @@ export n1derivative
 export endpoint
 export midpoint
 export integrate
-export ODE
-export ivp
+export InitialValueProblem
 export forward_euler
 export backward_euler
 export improved_euler

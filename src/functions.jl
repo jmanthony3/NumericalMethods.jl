@@ -7,29 +7,11 @@ using Symbolics
 
 # Ch. 2 (p. 47)
 """
-    SVI(f, a, b, n, tol)
+    SingleVariableIteration(f, a, b, n, tol)
 
-Given `f`(`x`) such that `x` ∈ [`a`, `b`], find the root of a single-variable, equation in so many iterations, `n` within tolerance, `tol`.
-
-Methods
--------
-bisection()
-    Search for solution by halving the bounds wherein `a` and `b` initially yield opposite signs in function.
-false_position(p0: float, p1: float)
-    solution bounded by `a` and `b` wherein initial guesses `p0` and `p1` yield opposite signs in function.
-fixed_point(p0: float)
-    Root-finding method to find solution near initial guess.
-newton_raphson(p0: float)
-    Root-finding method to find solution near initial guess.
-secant_method(p0: float, p1: float)
-    Initial guesses `p0` and `p1` must yield opposite signs in function. Solution is NOT bounded by `a` and `b`.
-
-# Notes
-Convergence Rates:
-
-    `newton_raphson` > `secant_method` > `false_position` > `fixed_point` > `bisection`
+Given `f`(p) such that p ∈ [`a`, `b`], find the root of a single-variable equation in so many iterations, `n` within tolerance, `tol`.
 """
-struct SVI
+struct SingleVariableIteration
     f   ::Function
     a   ::Real
     b   ::Real
@@ -38,20 +20,20 @@ struct SVI
 end
 
 """
-    maximumslope(obj::SVI)
+    maximum_slope(svi::SingleVariableIteration)
 
 Find the greatest value for first derivative of function.
 """
-function maximumslope(obj::SVI)::AbstractFloat
+function maximum_slope(svi::SingleVariableIteration)::AbstractFloat
     @variables x
     Dx  = Differential(x)
-    df  = simplify(expand_derivatives(Dx(obj.f(x))); expand=true)
+    df  = simplify(expand_derivatives(Dx(svi.f(x))); expand=true)
     df  = build_function(df, x, expression=Val{false})
-    return maximum(abs.(df.(range(obj.a, obj.b, length=1000))))
+    return maximum(abs.(df.(range(svi.a, svi.b, length=1000))))
 end
 
 """
-    max_iterations(obj, method[, p0=0])
+    maximum_iterations(obj, method[, p0=0])
 
 Find greatest integer for maximum iterations within tolerance.
 
@@ -59,17 +41,17 @@ Find greatest integer for maximum iterations within tolerance.
 Acceptable values for `method` ∈ {`:bisection`, `:fixed_point`, `:newton_raphson`, `:secant_method`, `:false_position`}.
 Initial guess, `p0` for function solution is not needed for `:bisection` method.
 """
-function max_iterations(
-    obj     ::SVI,
+function maximum_iterations(
+    svi     ::SingleVariableIteration,
     method  ::Symbol,
     p0      ::Real      = 0.;
     k       ::Real      = NaN
 )::Integer
-    if method == "bisection"
-        return ceil(-log(obj.tol / (obj.b - obj.a))
+    if method == :bisection
+        return ceil(-log(svi.tol / (svi.b - svi.a))
             / log(2))
-    elseif method in ("fixed_point", "newton_raphson", "secant_method", "false_position")
-        return ceil(-log(obj.tol / max(p0 - obj.a, obj.b - p0))
+    elseif method ∈ (:fixed_point, :newton_raphson, :secant_method, :false_position)
+        return ceil(-log(svi.tol / max(p0 - svi.a, svi.b - p0))
             / log(k))
     else
         error("Method must be: `:bisection`, `:fixed_point`, `:newton_raphson`, `:secant_method`, or `:false_position`.")
@@ -79,42 +61,110 @@ end
 
 ## 2.1 (p. 48)
 """
-    bisection(obj::SVI)
+    solve(svi::SingleVariableIteration[; method=:bisection, p0, p1, df])
+
+Attempt to find where f(p) = 0 according to `method` ∈ {`:bisection` (default), `:fixed_point`, `:newton_raphson`, `:secant_method`, `:false_position`}.
+Each `method` also has a convenience function.
+
+# Notes
+Convergence Rates:
+    `:newton_raphson` > `:secant_method` > `:false_position` > `:fixed_point` > `:bisection`
+
+`:bisection` is default because will always converge to a solution but is not the quickest.
+"""
+function solve(svi::SingleVariableIteration;
+    method  ::Symbol                    = :bisection,
+    p0      ::T                         = 0.,
+    p1      ::T                         = 0.,
+    df      ::Union{Nothing, Function}  = nothing
+)::AbstractFloat where {T<:Real}
+    f, a, b = svi.f, svi.a, svi.b
+    if method ∈ (:bisection, :secant_method, :false_position)
+        # check for opposite signs
+        if (method == :bisection ? f(a)*f(b) : f(p0)*f(p1)) < 0
+            k, N        = 1, svi.n
+            g, r        = zeros(MVector{N}), zeros(MVector{N})
+            g[k], r[k]  = f(a), 1.
+            # exit by whichever condition is `true` first
+            while r[k] >= svi.tol && k < N
+                if method == :bisection
+                    x       = (b - a) / 2.
+                    p       = a + x                         # new value, p
+                    f(a)*f(p) > 0 ? (a = p) : (b = p)       # adjust next bounds
+                    g[k+1], r[k+1] = p, abs(x)              # error of new value, p
+                elseif method ∈ (:secant_method, :false_position)
+                    q₀, q₁  = f(p0), f(p1)
+                    p       = p1 - q₁*(p1 - p0)/(q₁ - q₀)   # new value, p
+                    g[k+1], r[k+1] = p, abs(p - p0)         # error of new value
+                    if method == :secant_method
+                        p0      = p1
+                    elseif method == :false_position
+                        f(p)*q₁ < 0 ? p0 = p1 : nothing     # adjust next bounds
+                    end
+                    p1      = p
+                end
+                k += 1                                  # iterate to k + 1
+            end
+            return k <= N ? g[k] : NaN
+        else # abort if f(a) is not opposite f(b)
+            if method == :bisection
+                error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(a = %1.4f) = %1.4f, f(b = %1.4f) = %1.4f]",
+                    a, b, f(a), f(b)))
+            elseif method ∈ (:secant_method, :false_position)
+                error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(p₀ = %1.4f) = %1.4f, f(p₁ = %1.4f) = %1.4f]",
+                    p0, p1, f(p0), f(p1)))
+            end
+        end
+    elseif method ∈ (:fixed_point, :newton_raphson)
+        # determine form of derivative
+        if method == :newton_raphson && isnothing(df)
+            @variables x
+            Dx  = Differential(x)
+            df  = simplify(expand_derivatives(Dx(f(x))); expand=true)
+            df  = build_function(df, x, expression=Val{false})
+        end
+        # initialize
+        k, N = 1, svi.n
+        g, r = zeros(MVector{N}), zeros(MVector{N})
+        g[k] = f(if method == :fixed_point
+            (a + b) / 2.
+        elseif method == :newton_raphson
+            a
+        end)
+        r[k] = 1.
+        # exit by whichever condition is `true` first
+        while r[k] >= svi.tol && k < N
+            p = if method == :fixed_point
+                f(p0)                           # new value, p
+            elseif method == :newton_raphson
+                p0 - (f(p0) / df(p0))
+            end
+            g[k+1], r[k+1] = p, if method == :fixed_point
+                abs((p-p0)/p0)                  # error of new value, p
+            elseif method == :newton_raphson
+                abs(p - p0)
+            end
+            p0 = p; k += 1                      # iterate to k + 1
+        end
+        return k <= N ? g[k] : NaN
+    end
+end
+
+"""
+    bisection(svi::SingleVariableIteration)
 
 Root-finding method: f(x) = 0.
-Search for solution by halving the bounds wherein `a` and `b` initially yield opposite signs in function.
+Search for solution by halving the bounds such that `a` and `b` initially yield opposite signs in function.
 
 # Notes
 Relying on the Intermediate Value Theorem (IVT), this is a bracketed, root-finding method.
 This method is rather slow to converge but will always converge to a solution; therefore, is a good starter method.
 """
-function bisection(obj)
-    f, a, b = obj.f, obj.a, obj.b
-    if f(a)*f(b) < 0    # check if f(a) and f(b) are opposite signs
-        N = obj.n
-        # initialize
-        k = 1
-        g = zeros(MVector{N})
-        r = zeros(MVector{N})
-        g[k], r[k] = f(a), 1.
-        # exit by whichever condition is `true` first
-        while r[k] >= obj.tol && k < N
-            x = (b - a) / 2.
-            p = a + x                           # new value, p
-            f(a)*f(p) > 0 ? (a = p) : (b = p)   # adjust next bounds
-            g[k+1], r[k+1] = p, abs(x)          # error of new value, p
-            k += 1                              # iterate to k + 1
-        end
-        return k <= N ? g[k] : NaN
-    else                # abort if f(a) is not opposite f(b)
-        error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(a = %1.4f) = %1.4f, f(b = %1.4f) = %1.4f]",
-            a, b, f(a), f(b)))
-    end
-end
+bisection(svi::SingleVariableIteration) = solve(svi; method=:bisection)
 
 ## 2.2 (p. 55)
 """
-    fixed_point(obj, p0)
+    fixed_point(svi, p0)
 
 Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
 
@@ -131,70 +181,35 @@ Theorem:
 
 Converges by mathcal{O}(text{linear}) if g'(p) ≠ 0, and mathcal{O}(text{quadratic}) if g'(p) = 0 and g''(p) < M, where M = g''(ξ) that is the error function.
 """
-function fixed_point(obj::SVI, p0::AbstractFloat)::AbstractFloat
-    f, a, b = obj.f, obj.a, obj.b
-    N = obj.n
-    # initialize
-    k = 1
-    g = zeros(MVector{N})
-    r = zeros(MVector{N})
-    g[k], r[k] = f((a + b) / 2.), 1.
-    # exit by whichever condition is `true` first
-    while r[k] >= obj.tol && k < N
-        p = f(p0)                           # new value, p
-        g[k+1], r[k+1] = p, abs((p-p0)/p0)  # error of new value, p
-        p0 = p; k += 1                      # iterate to k + 1
-    end
-    return k <= N ? g[k] : NaN
-end
+fixed_point(svi::SingleVariableIteration, p0::Real) = solve(svi; method=:fixed_point, p0=p0)
 
 ## 2.3 (p. 66)
 """
-    newton_raphson(obj, p0)
+    newton_raphson(svi, p0[; df::Union{Nothing, Function}=nothing])
 
-Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
+Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0. `df` will be the first derivative of function if not given.
 
 **Use function with lowest slope!**
 
-_f'(x) ≠ 0_
+_`df`(x) ≠ 0_
 
 # Notes
-Not root-bracketed and has trouble with symmetric functions!
+Quickest convergence rate, but not root-bracketed and has trouble with symmetric functions!
 Initial guess, `p0` must be close to real solution; else, will converge to different root or oscillate (if symmetric).
 This method can be viewed as fixed-point iteration.
 
 Technique based on first Taylor polynomial expansion of f about p_{0} (that is `p0`) and evaluated at x = p. |p - p_{0}| is assumed small; therefore, 2^{\text{nd}}-order Taylor term, the error, is small.
 
-Newton-Raphson has quickest convergence rate.
-
 See `fixed_point()` for theorem.
 """
-function newton_raphson(obj::SVI, p0::AbstractFloat)::AbstractFloat
-    f, a, b = obj.f, obj.a, obj.b
-    # determine form of derivative
-    @variables x
-    Dx  = Differential(x)
-    df  = simplify(expand_derivatives(Dx(f(x))); expand=true)
-    df  = build_function(df, x, expression=Val{false})
-    N = obj.n
-    # initialize
-    k = 1
-    g = zeros(MVector{N})
-    r = zeros(MVector{N})
-    g[k], r[k] = f(a), 1.
-    # exit by whichever condition is TRUE first
-    while r[k] >= obj.tol && k < N
-        p = p0 - (f(p0) / df(p0))           # new value, p
-        g[k+1], r[k+1] = p, abs(p - p0)     # error of new value, p
-        p0 = p; k += 1                      # iterate to k + 1
-    end
-    return k <= N ? g[k] : NaN
-end
+newton_raphson(svi::SingleVariableIteration, p0::Real;
+    df::Union{Nothing, Function}=nothing
+) = solve(svi; method=:newton_raphson, p0=p0, df=df)
 
 """
-    secant_method(obj, p0, p1)
+    secant_method(svi, p0, p1)
 
-Attempt root-finding method with initial guesses, `p0` and `p1` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
+Attempt root-finding method with initial guesses such that `p0` and `p1` in [a, b] yield opposite signs in function.
 
 **Use function with lowest slope!**
 
@@ -205,33 +220,13 @@ Method is less computationally expensive than `newton_raphson()` but may converg
 
 See `fixed_point()` for theorem.
 """
-function secant_method(obj::SVI, p0::T, p1::T)::AbstractFloat where {T<:AbstractFloat}
-    f, a, b = obj.f, obj.a, obj.b
-    if f(p0)*f(p1) < 0  # check if f(p0) and f(p1) are opposite signs
-        N = obj.n
-        # initialize
-        k = 1
-        g = zeros(MVector{N})
-        r = zeros(MVector{N})
-        g[k], r[k] = f(a), 1.
-        # exit by whichever condition is TRUE first
-        while r[k] >= obj.tol && k < N
-            q0, q1 = f(p0), f(p1)
-            p = p1 - q1*(p1 - p0)/(q1 - q0)     # new value, p
-            g[k+1], r[k+1] = p, (abs(p - p0))   # error of new value
-            p0, p1 = p1, p; k += 1              # iterate to k + 1
-        end
-        return k <= N ? g[k] : NaN
-    else                # abort if f(p0) is not opposite f(p1)
-        error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(p0 = %1.4f) = %1.4f, f(p1 = %1.4f) = %1.4f]",
-            p0, p1, f(p0), f(p1)))
-    end
-end
+secant_method(svi::SingleVariableIteration, p0::Real, p1::Real
+) = solve(svi; method=:secant_method, p0=p0, p1=p1)
 
 """
-    false_position(obj, p0, p1)
+    false_position(svi, p0, p1)
 
-Attempt root-finding method with initial guesses, `p0` and `p1` in [a, b] solving the equation g(p) = p via f(p) - p = 0.
+Attempt root-finding method with initial guesses such that `p0` and `p1` in [a, b] yield opposite signs in function.
 
 **Use function with lowest slope!**
 
@@ -240,29 +235,8 @@ Similar to, but slower to converge than, the `secant_method()` by including a te
 
 See `fixed_point()` for theorem.
 """
-function false_position(obj::SVI, p0::T, p1::T)::AbstractFloat where {T<: AbstractFloat}
-    f, a, b = obj.f, obj.a, obj.b
-    if f(p0)*f(p1) < 0  # check if f(p0) and f(p1) are opposites signs
-        N = obj.n
-        # initialize
-        k = 1
-        g = zeros(MVector{N})
-        r = zeros(MVector{N})
-        g[k], r[k] = f(a), 1.
-        # exit by whichever condition is `true` first
-        while r[k] >= obj.tol && k < N
-            q0, q1 = f(p0), f(p1)
-            p = p1 - q1*(p1 - p0)/(q1 - q0)     # new value, p
-            g[k+1], r[k+1] = p, abs(p - p0)     # error of new value, p
-            f(p)*q1 < 0 ? p0 = p1 : nothing     # adjust next bounds
-            p1 = p; k += 1                      # iterate to k + 1
-        end
-        return k <= N ? g[k] : NaN
-    else                # abort if f(p0) is not opposite f(p1)
-        error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(p0 = %1.4f) = %1.4f, f(p1 = %1.4f) = %1.4f]",
-            p0, p1, f(p0), f(p1)))
-    end
-end
+false_position(svi::SingleVariableIteration, p0::Real, p1::Real
+) = solve(svi; method=:false_position, p0=p0, p1=p1)
 
 # Ch. 3 (p. 103)
 ## 3.1 (p. 104)
@@ -791,39 +765,39 @@ end
 
 # Ch. 5 (p. 259)
 """
-    ODE(f, a, b, h, α, β, N)
+    InitialValueProblem(f, a, b, h, α, N)
 
-Structure of the boundary conditions to differential equation.
+Structure of the boundary conditions to Initial-Value Problem (IVP) differential equation.
 
 # Notes
 Make sure the independent variable (e.g. time) is the first argument of `f`!
 """
-struct ODE
+struct InitialValueProblem
     f::Function
     a::Real
     b::Real
     h::Real
     α::Real
-    β::Real
     N::Integer
 end
 
 """
-    ivp(obj::ODE[; tol=10^-3, method=:forward_euler])
+    solve(ivp::InitialValueProblem[; method=:forward_euler, tol=10^-3])
 
-Solve `obj` according to `method` ∈ {`:forward_euler` (default), `:backward_euler`, `:improved_euler`, `:modified_euler`, `:runge_kutta`}.
+Solve `ivp` according to `method` ∈ {`:forward_euler` (default), `:backward_euler`, `:improved_euler`, `:modified_euler`, `:runge_kutta`}.
 
 # Notes
 Each method has an equivalent convenience function.
-E.g. `ivp(obj; method=:runge_kutta)` ≡ `runge_kutta(obj)`.
+E.g. `solve(ivp; method=:runge_kutta)` ≡ `runge_kutta(ivp)`.
 """
-function ivp(obj::ODE; tol=10^-3, method=:forward_euler)::AbstractVector
-    f       = obj.f
-    t, h, w = obj.a, obj.h, obj.α
+function solve(ivp::InitialValueProblem;
+method::Symbol=:forward_euler, tol::Real=10^-3)::AbstractVector
+    f       = ivp.f
+    t, h, w = ivp.a, ivp.h, ivp.α
     ea, eb, λ = 1/2, 1/2, 1
-    g       = zeros(MVector{obj.N + 1})
+    g       = zeros(MVector{ivp.N + 1})
     g[1]    = w
-    for i ∈ 1:1:obj.N
+    for i ∈ 1:1:ivp.N
         w += if method == :forward_euler
             h * f(t, w)
         elseif method == :backward_euler
@@ -839,16 +813,21 @@ function ivp(obj::ODE; tol=10^-3, method=:forward_euler)::AbstractVector
         end
         g[i + 1] = w
         # push!(increments, w - w0)
-        t   = obj.a + i*h
+        t   = ivp.a + i*h
     end
     return g
 end
 
-forward_euler(obj;  tol=10^-3) = ivp(obj; tol=tol, method=:forward_euler)
-backward_euler(obj; tol=10^-3) = ivp(obj; tol=tol, method=:backward_euler)
-improved_euler(obj; tol=10^-3) = ivp(obj; tol=tol, method=:improved_euler)
-modified_euler(obj; tol=10^-3) = ivp(obj; tol=tol, method=:modified_euler)
-runge_kutta(obj;    tol=10^-3) = ivp(obj; tol=tol, method=:runge_kutta)
+forward_euler(ivp::InitialValueProblem;
+tol=10^-3) = solve(ivp; tol=tol, method=:forward_euler)
+backward_euler(ivp::InitialValueProblem;
+tol=10^-3) = solve(ivp; tol=tol, method=:backward_euler)
+improved_euler(ivp::InitialValueProblem;
+tol=10^-3) = solve(ivp; tol=tol, method=:improved_euler)
+modified_euler(ivp::InitialValueProblem;
+tol=10^-3) = solve(ivp; tol=tol, method=:modified_euler)
+runge_kutta(ivp::InitialValueProblem;
+tol=10^-3) = solve(ivp; tol=tol, method=:runge_kutta)
 
 # Ch. 8 (p. 505)
 ## 8.1 (p. 506)
