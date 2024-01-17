@@ -775,7 +775,6 @@ Make sure the independent variable (e.g. time) is the first argument of `f`!
 struct InitialValueProblem
     f::Function
     a::Real
-    b::Real
     h::Real
     α::Real
     N::Integer

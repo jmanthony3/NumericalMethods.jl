@@ -61,9 +61,9 @@ using Test
 
     ## ODE/PDE
     f(t, y) = y - t^2 + 1
-    a, b, h = 0., 2., 0.2
-    N, α, β = 10, 0.5, NaN
-    ivp     = InitialValueProblem(f, a, b, h, α, N)
+    a, h = 0., 0.2
+    N, α = 10, 0.5
+    ivp     = InitialValueProblem(f, a, h, α, N)
     @test round.(runge_kutta(ivp),                  digits=6)       == [
         0.5,        0.829293,   1.214076,
         1.648922,   2.127203,   2.640823,
