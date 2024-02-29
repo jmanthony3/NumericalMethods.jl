@@ -48,9 +48,9 @@ using Test
     h, a, b = 0.25, 1, 2
     x       = [a:h:b...]
     y       = (x .^ 2) .* cos.(x)
-    @test round(n1derivative(x, y, 2), digits=6)                    == -0.690759
-    @test round(endpoint(x, y, h, :begin), digits=6)                ==  0.381398
-    @test round(midpoint(x, y, h, 2), digits=6)                     == -0.762287
+    @test round(n1derivative(x, y, 2),              digits=6)       == -0.690759
+    @test round(endpoint(x, y, h, :begin),          digits=6)       ==  0.381398
+    @test round(midpoint(x, y, h, 2),               digits=6)       == -0.762287
 
     ## integration
     @test round(integrate(y, x, rule=:trapezoidal), digits=6)       == -0.114043
