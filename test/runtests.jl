@@ -12,19 +12,19 @@ using Test
     g(x)    = 2 \ √(10 - x^3)
     svi     = SingleVariableIteration(g, a, b, N, tol)
     @test round(fixed_point(svi, 1.5),              digits=6)       == 1.365230
-    h(x) = cos(x) - x
+    h(x)    = cos(x) - x
     a, b, N, tol = 0., pi/2., 50, 10^-6
-    svi = SingleVariableIteration(h, a, b, N, tol)
+    svi     = SingleVariableIteration(h, a, b, N, tol)
     @test round(newton_raphson(svi, pi / 4.),       digits=6)       == 0.739085
     @test round(secant_method(svi, 0.5, pi / 4.),   digits=6)       == 0.739085
     a, b, N, tol = 0., pi/2., 100, 10^-1
-    svi = SingleVariableIteration(h, a, b, N, tol)
+    svi     = SingleVariableIteration(h, a, b, N, tol)
     @test round(false_position(svi, 0.5, pi / 4.),  digits=6)       == 0.739058
 
     ## interpolation
-    x = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
-    y = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
-    n = 2
+    x       = [0.01, 0.15, 0.31, 0.5, 0.6, 0.75]
+    y       = [1.0, 1.004, 1.031, 1.117, 1.223, 1.422]
+    n       = 2
     @test round(linearleastsquares(x, y, n)[2],     digits=6)       == 0.000873
 
     a, b, h = 1., 2.2, 0.3
@@ -38,9 +38,9 @@ using Test
     @test round(lagrange(x, y1)[2][end],            digits=6)       == 0.006033
     @test round(lagrange(x, y2)[2][end],            digits=6)       == 0.000283
 
-    x   = [0.0:0.1:0.5...]
-    y   = sin.(3 .* x)
-    dx  = 3cos.(3 .* x)
+    x       = [0.0:0.1:0.5...]
+    y       = sin.(3 .* x)
+    dx      = 3cos.(3 .* x)
     @test round(clamped(x, y, dx)[2][begin](0.05),  digits=6)       == 0.149437
     @test round(natural(x, y)[2][begin](0.05),      digits=6)       == 0.149408
 
@@ -61,8 +61,8 @@ using Test
 
     ## ODE/PDE
     f(t, y) = y - t^2 + 1
-    a, h = 0., 0.2
-    N, α = 10, 0.5
+    a, h    = 0., 0.2
+    N, α    = 10, 0.5
     ivp     = InitialValueProblem(f, a, h, α, N)
     @test round.(runge_kutta(ivp),                  digits=6)       == [
         0.5,        0.829293,   1.214076,
