@@ -331,7 +331,7 @@ function lagrange(
     f::T;
     n::Union{Integer, Nothing}  = nothing
 ) where {T<:AbstractVector}
-    lagrange(float(collect(x)), float(collect(f)); n=n)
+    return lagrange(float(collect(x)), float(collect(f)); n=n)
 end;
 
 ## 3.3 (p. 122)
@@ -585,7 +585,7 @@ function n1derivative(
     j::Integer;
     n::Union{Integer, Nothing}  = nothing
 ) where {T<:AbstractVector}
-    n1derivative(float(collect(x)), float(collect(f)), j; n=n)
+    return n1derivative(float(collect(x)), float(collect(f)), j; n=n)
 end;
 
 """
@@ -627,6 +627,16 @@ function endpoint(
     end
 end
 
+function endpoint(
+    x       ::T,
+    f       ::T,
+    h       ::Real,
+    point   ::Symbol;
+    method  ::Symbol    = :three
+) where {T<:AbstractVector}
+    return endpoint(float(collect(x)), float(collect(f)), h, point; method=method)
+end
+
 """
     midpoint(x, f, h, point[; method=:three])
 
@@ -651,6 +661,16 @@ function midpoint(
     else
         NaN
     end
+end
+
+function midpoint(
+    x       ::T,
+    f       ::T,
+    h       ::Real,
+    point   ::Integer;
+    method  ::Symbol    = :three
+) where {T<:AbstractVector}
+    return midpoint(float(collect(x)), float(collect(f)), h, point; method=method)
 end
 
 ## 4.3 (p. 191)
