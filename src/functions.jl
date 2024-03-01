@@ -332,7 +332,7 @@ function lagrange(
     n::Union{Integer, Nothing}  = nothing
 ) where {T<:AbstractVector}
     return lagrange(float(collect(x)), float(collect(f)); n=n)
-end;
+end
 
 ## 3.3 (p. 122)
 """
@@ -586,7 +586,7 @@ function n1derivative(
     n::Union{Integer, Nothing}  = nothing
 ) where {T<:AbstractVector}
     return n1derivative(float(collect(x)), float(collect(f)), j; n=n)
-end;
+end
 
 """
     endpoint(x, f, h, point[; method=:three])
