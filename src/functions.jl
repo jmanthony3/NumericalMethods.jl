@@ -312,7 +312,7 @@ function lagrange(
         end
         return maximum(abs.(ξ_error))
     end
-    n  = (isnothing(n) ? length(x) - 1 : n)
+    n       = (isnothing(n) ? length(x) - 1 : n)
     # terms   = Num[]
     terms   = Vector{Num}(undef, n + 1)
     # errors  = zeros(MVector{n + 1})
@@ -555,11 +555,11 @@ function n1derivative(
     f::T,
     j::Integer;
     n::Union{Integer, Nothing}   = nothing
-)::AbstractFloat where {T<:AbstractVector}
+)::Float64 where {T<:Vector{Float64}}
     @variables t
     Dt = Differential(t)
-    function coefficient(xₖ, t)
-        num, den = [], []
+    function coefficient(x, xₖ, t)
+        num, den = Num[], Float64[]
         for xₗ ∈ x
             if isa(xₗ, Num) || xₗ != xₖ
                 push!(num, (t - xₗ))
@@ -568,16 +568,25 @@ function n1derivative(
         end
         return prod(num) / prod(den)
     end
-    n  = (isnothing(n) ? length(x) - 1 : n)
+    n       = (isnothing(n) ? length(x) - 1 : n)
     gp      = 0.
     for k ∈ 1:1:n + 1
-        Lₖ          = coefficient(x[k], t)
+        Lₖ          = coefficient(x, x[k], t)
         Lₖp         = simplify(expand_derivatives(Dt(Lₖ)); expand=true)
         Lₖp_eval    = build_function(Lₖp, t, expression=Val{false})
         gp         += f[k]*Lₖp_eval(x[j])
     end
     return gp
 end
+
+function n1derivative(
+    x::T,
+    f::T,
+    j::Integer;
+    n::Union{Integer, Nothing}  = nothing
+) where {T<:AbstractVector}
+    n1derivative(float(collect(x)), float(collect(f)), j; n=n)
+end;
 
 """
     endpoint(x, f, h, point[; method=:three])
