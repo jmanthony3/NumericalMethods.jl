@@ -600,7 +600,7 @@ function endpoint(
     h       ::Real,
     point   ::Symbol;
     method  ::Symbol    = :three
-)::AbstractFloat where {T<:AbstractVector}
+)::Float64 where {T<:Vector{Float64}}
     i = (point == :begin ? 1 : (point == :end ? length(x) : nothing))
     if point == :begin
         if method == :three
@@ -639,7 +639,7 @@ function midpoint(
     h       ::Real,
     point   ::Integer;
     method  ::Symbol    = :three
-)::AbstractFloat where {T<:AbstractVector}
+)::Float64 where {T<:Vector{Float64}}
     i = point
     return if method == :three
         (f[i + 1] - f[i - 1]) / 2h
