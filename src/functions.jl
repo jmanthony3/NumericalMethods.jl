@@ -318,8 +318,8 @@ function lagrange(
     # errors  = zeros(MVector{n + 1})
     errors  = Vector{Float64}(undef, n + 1)
     for k ∈ 1:1:n + 1
-        push!(terms, f[k] * coefficient(x, x[k], t))
-        # terms[k]    = f[k] * coefficient(x, x[k], t)
+        # push!(terms, f[k] * coefficient(x, x[k], t))
+        terms[k]    = f[k] * coefficient(x, x[k], t)
         errors[k]   = error(k, sum(terms[begin:k]), t)
     end
     p       = build_function(sum(terms), t, expression=Val{false})
@@ -390,7 +390,7 @@ The bookend polynomials do not assume the slope entering and exiting the interva
 function natural(
     x   ::T,
     f   ::T
-)::Tuple{Vector{Float64}, AbstractArray{Function}} where {T<:Vector{Float64}}
+)::Tuple{Vector{Float64}, Vector{Function}} where {T<:Vector{Float64}}
     function _algorithm(g)
         Y               = g
         m, n            = length(Y), length(Y) - 1
@@ -436,11 +436,12 @@ function natural(
     end
     g, X            = f, x
     Y, A, B, C, D   = _algorithm(g)
-    n, splines      = length(X) - 1, Vector{Function}(undef, n) # []
+    n               = length(X) - 1
+    splines         = Vector{Function}(undef, n) # []
     for j ∈ 1:1:n
         xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
         sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
-        push!(splines, sj)
+        splines[j] = sj
     end
     return Y, splines
 end
@@ -454,7 +455,7 @@ function clamped(
     x   ::T,
     f   ::T,
     fp  ::T
-)::Tuple{Vector{Float64}, AbstractArray{Function}} where {T<:Vector{Float64}}
+)::Tuple{Vector{Float64}, Vector{Function}} where {T<:Vector{Float64}}
     function _algorithm(g, gp)
         Y, YP           = g, gp
         m, n            = length(Y), length(Y) - 1
@@ -504,11 +505,12 @@ function clamped(
     end
     g, X, gp        = f, x, fp
     Y, A, B, C, D   = _algorithm(g, gp)
-    n, splines      = length(X) - 1, Vector{Function}(undef, n) # []
+    n               = length(X) - 1
+    splines         = Vector{Function}(undef, n) # []
     for j ∈ 1:1:n
         xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
         sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
-        push!(splines, sj)
+        splines[j] = sj
     end
     return Y, splines
 end
@@ -522,7 +524,7 @@ An application of Hermitic polynomials to draw Bezier curves between points.
 # Notes
 Each argument should be a one-to-one mapping of points, (xᵢ, yᵢ) and (xᵢ₊₁, yᵢ₊₁) and their respective guide points, (xᵢ⁺, yᵢ⁺) and (xᵢ₊₁⁻, yᵢ₊₁⁻).
 """
-function bezier(x::T, y::T, xguides::T, yguides::T)::AbstractArray{Function} where {T<:AbstractVector}
+function bezier(x::T, y::T, xguides::T, yguides::T)::Vector{Function} where {T<:AbstractVector}
     n, curves = length(x) - 1, []
     for i ∈ 1:1:n
         a = (x[i],
