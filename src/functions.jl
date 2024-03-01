@@ -77,13 +77,14 @@ function solve(svi::SingleVariableIteration;
     p0      ::T                         = 0.,
     p1      ::T                         = 0.,
     df      ::Union{Nothing, Function}  = nothing
-)::AbstractFloat where {T<:Real}
+)::Float64 where {T<:Float64}
     f, a, b = svi.f, svi.a, svi.b
     if method ∈ (:bisection, :secant_method, :false_position)
         # check for opposite signs
         if (method == :bisection ? f(a)*f(b) : f(p0)*f(p1)) < 0
             k, N        = 1, svi.n
-            g, r        = zeros(MVector{N}), zeros(MVector{N})
+            # g, r        = zeros(MVector{N}), zeros(MVector{N})
+            g, r        = Vector{Float64}(undef, N), Vector{Float64}(undef, N)
             g[k], r[k]  = f(a), 1.
             # exit by whichever condition is `true` first
             while r[k] >= svi.tol && k < N
@@ -125,7 +126,8 @@ function solve(svi::SingleVariableIteration;
         end
         # initialize
         k, N = 1, svi.n
-        g, r = zeros(MVector{N}), zeros(MVector{N})
+        # g, r = zeros(MVector{N}), zeros(MVector{N})
+        g, r = Vector{Float64}(undef, N), Vector{Float64}(undef, N)
         g[k] = f(if method == :fixed_point
             (a + b) / 2.
         elseif method == :newton_raphson
@@ -181,7 +183,7 @@ Theorem:
 
 Converges by mathcal{O}(text{linear}) if g'(p) ≠ 0, and mathcal{O}(text{quadratic}) if g'(p) = 0 and g''(p) < M, where M = g''(ξ) that is the error function.
 """
-fixed_point(svi::SingleVariableIteration, p0::Real) = solve(svi; method=:fixed_point, p0=p0)
+fixed_point(svi::SingleVariableIteration, p0::Float64) = solve(svi; method=:fixed_point, p0=p0)
 
 ## 2.3 (p. 66)
 """
@@ -202,7 +204,7 @@ Technique based on first Taylor polynomial expansion of f about p_{0} (that is `
 
 See `fixed_point()` for theorem.
 """
-newton_raphson(svi::SingleVariableIteration, p0::Real;
+newton_raphson(svi::SingleVariableIteration, p0::Float64;
     df::Union{Nothing, Function}=nothing
 ) = solve(svi; method=:newton_raphson, p0=p0, df=df)
 
@@ -220,7 +222,7 @@ Method is less computationally expensive than `newton_raphson()` but may converg
 
 See `fixed_point()` for theorem.
 """
-secant_method(svi::SingleVariableIteration, p0::Real, p1::Real
+secant_method(svi::SingleVariableIteration, p0::Float64, p1::Float64
 ) = solve(svi; method=:secant_method, p0=p0, p1=p1)
 
 """
@@ -235,7 +237,7 @@ Similar to, but slower to converge than, the `secant_method()` by including a te
 
 See `fixed_point()` for theorem.
 """
-false_position(svi::SingleVariableIteration, p0::Real, p1::Real
+false_position(svi::SingleVariableIteration, p0::Float64, p1::Float64
 ) = solve(svi; method=:false_position, p0=p0, p1=p1)
 
 # Ch. 3 (p. 103)
@@ -252,12 +254,12 @@ Polynomials will quickly oscillate for larger datasets.
 function lagrange(
     x::T,
     f::T;
-    n::Union{Integer, Nothing}   = nothing
-)::Tuple{Function, AbstractVector} where {T<:AbstractVector}
+    n::Union{Integer, Nothing}  = nothing
+)::Tuple{Function, Vector{Float64}} where {T<:Vector{Float64}}
     @variables t
     Dt = Differential(t)
-    function coefficient(xₖ, t)
-        num, den = [], []
+    function coefficient(x, xₖ, t)
+        num, den = Num[], Float64[]
         for xₗ ∈ x
             if isa(xₗ, Num) || xₗ != xₖ
                 push!(num, (t - xₗ))
@@ -267,8 +269,9 @@ function lagrange(
         return prod(num) / prod(den)
     end
     function error(n, ξ, t)
-        s       = []
-        ξ_error = zeros(MVector{n})
+        s       = Num[]
+        # ξ_error = zeros(MVector{n})
+        ξ_error = Vector{Float64}(undef, n)
         for i ∈ 1:1:n
             push!(s, t - x[i])
             g               = simplify(prod(s); expand=true)
@@ -291,7 +294,7 @@ function lagrange(
             elseif i == 2
                 g_eval(roots(g_prime_poly)[begin])
             else
-                R = []
+                R = Float64[]
                 for r ∈ roots(g_prime_poly)
                     if isreal(r)
                         push!(R, g_eval(r))
@@ -310,15 +313,26 @@ function lagrange(
         return maximum(abs.(ξ_error))
     end
     n  = (isnothing(n) ? length(x) - 1 : n)
-    terms   = []
-    errors  = zeros(MVector{n + 1})
+    # terms   = Num[]
+    terms   = Vector{Num}(undef, n + 1)
+    # errors  = zeros(MVector{n + 1})
+    errors  = Vector{Float64}(undef, n + 1)
     for k ∈ 1:1:n + 1
-        push!(terms, f[k] * coefficient(x[k], t))
-        errors[k]   = error(k, sum(terms), t)
+        push!(terms, f[k] * coefficient(x, x[k], t))
+        # terms[k]    = f[k] * coefficient(x, x[k], t)
+        errors[k]   = error(k, sum(terms[begin:k]), t)
     end
     p       = build_function(sum(terms), t, expression=Val{false})
     return p, errors
 end
+
+function lagrange(
+    x::T,
+    f::T;
+    n::Union{Integer, Nothing}  = nothing
+) where {T<:AbstractVector}
+    lagrange(float(collect(x)), float(collect(f)); n=n)
+end;
 
 ## 3.3 (p. 122)
 """
@@ -334,33 +348,33 @@ Polynomials best made with even spacing in `x`; although, this is not completely
 function newtondifference(
     x   ::T,
     f   ::T,
-    α   ::Real;
+    α   ::Float64;
     dir ::Symbol        = :auto
-)::Function where {T<:AbstractVector}
+)::Function where {T<:Vector{Float64}}
     if dir == :auto
         dir = (α <= median(x) ? :forward : :backward)
     end
     fterm(g, i ,j) = (g[i, j] - g[i - 1, j]) / (g[i, 1] - g[i - (j - 1), 1])
     m, n    = length(x), length(x) + 1
-    fxn     = MMatrix{m, n}(zeros((m, n)))
-    coeff   = zeros(MVector{m - 1})
+    # fxn     = MMatrix{m, n}(zeros((m, n)))
+    fxn     = Matrix{Float64}(undef, m, n)
+    # coeff   = zeros(MVector{m - 1})
+    coeff   = Vector{Float64}(undef, m - 1)
     fxn[:, 1], fxn[:, 2] = x, f
-    for j ∈ 2:1:m
-        for i ∈ j:1:m
-            fₖ = fterm(fxn, i, j)
-            fxn[i, j + 1] = fₖ
-            if dir == :forward && i == j
-                coeff[j - 1] = fₖ
-            elseif dir == :backward && i == m
-                coeff[j - 1] = fₖ
-            end
+    for j ∈ 2:1:m, i ∈ j:1:m
+        fₖ = fterm(fxn, i, j)
+        fxn[i, j + 1] = fₖ
+        if dir == :forward && i == j
+            coeff[j - 1] = fₖ
+        elseif dir == :backward && i == m
+            coeff[j - 1] = fₖ
         end
     end
     @variables t
     k, g, terms = (dir == :forward ? 1 : m), 0., 1.
     for c ∈ coeff
         terms  *= (t - x[k])
-        g      += c * prod(terms)
+        g      += c * terms
         k      += (dir == :forward ? 1 : -1)
     end
     p = g + (dir == :forward ? f[begin] : f[end])
@@ -376,17 +390,19 @@ The bookend polynomials do not assume the slope entering and exiting the interva
 function natural(
     x   ::T,
     f   ::T
-)::Tuple{AbstractVector, AbstractArray{Function}} where {T<:AbstractVector}
+)::Tuple{Vector{Float64}, AbstractArray{Function}} where {T<:Vector{Float64}}
     function _algorithm(g)
         Y               = g
         m, n            = length(Y), length(Y) - 1
         # STEP 1:   build list, h_i
-        H               = zeros(MVector{n})
+        # H               = zeros(MVector{n})
+        H               = Vector{Float64}(undef, n)
         for i ∈ 1:1:n
             H[i] = X[i+1] - X[i]
         end
         # STEP 2:   build list, alpha_i
-        A, ALPHA        = Y, zeros(MVector{m})
+        # A, ALPHA        = Y, zeros(MVector{m})
+        A, ALPHA        = Y, Vector{Float64}(undef, m)
         # ALPHA[1]        = 3*(A[2] - A[1])/H[1] - 3*AP[1]
         # ALPHA[m]        = 3*AP[m] - 3*(A[m] - A[n])/H[n]
         for i ∈ 2:1:n
@@ -394,8 +410,10 @@ function natural(
         end
         # Algorithm 6.7 to solve tridiagonal
         # STEP 3:   define l, mu, and z first points
-        L, MU           = zeros(MVector{m}), zeros(MVector{m})
-        Z, C            = zeros(MVector{m}), zeros(MVector{m})
+        # L, MU           = zeros(MVector{m}), zeros(MVector{m})
+        L, MU           = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
+        # Z, C            = zeros(MVector{m}), zeros(MVector{m})
+        Z, C            = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
         L[1], MU[1], Z[1]= 1., 0, 0.
         # STEP 4:   build lists l, mu, and z
         for i ∈ 2:1:n
@@ -406,7 +424,8 @@ function natural(
         # STEP 5:   define l, z, and c endpoints
         L[m], Z[m], C[m]= 1., 0., 0.
         # STEP 6:   build lists c, b, and d
-        B, D            = zeros(MVector{n}), zeros(MVector{n})
+        # B, D            = zeros(MVector{n}), zeros(MVector{n})
+        B, D            = Vector{Float64}(undef, n), Vector{Float64}(undef, n)
         for i ∈ 0:1:n-1
             j    = n-i
             C[j] = Z[j] - MU[j]*C[j+1]
@@ -417,7 +436,7 @@ function natural(
     end
     g, X            = f, x
     Y, A, B, C, D   = _algorithm(g)
-    n, splines      = length(X) - 1, []
+    n, splines      = length(X) - 1, Vector{Function}(undef, n) # []
     for j ∈ 1:1:n
         xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
         sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
@@ -435,17 +454,19 @@ function clamped(
     x   ::T,
     f   ::T,
     fp  ::T
-)::Tuple{AbstractVector, AbstractArray{Function}} where {T<:AbstractVector}
+)::Tuple{Vector{Float64}, AbstractArray{Function}} where {T<:Vector{Float64}}
     function _algorithm(g, gp)
         Y, YP           = g, gp
         m, n            = length(Y), length(Y) - 1
         # STEP 1:   build list, h_i
-        H               = zeros(MVector{n})
+        # H               = zeros(MVector{n})
+        H               = Vector{Float64}(undef, n)
         for i ∈ 1:1:n
             H[i] = X[i+1] - X[i]
         end
         # STEP 2:   define alpha list endpoints
-        A, AP, ALPHA    = Y, YP, zeros(MVector{m})
+        # A, AP, ALPHA    = Y, YP, zeros(MVector{m})
+        A, AP, ALPHA    = Y, YP, Vector{Float64}(undef, m)
         ALPHA[1]        = 3(A[2] - A[1])/H[1] - 3AP[1]
         ALPHA[m]        = 3AP[m] - 3(A[m] - A[n])/H[n]
         # STEP 3:   build list, alpha_i
@@ -454,8 +475,10 @@ function clamped(
         end
         # Algorithm 6.7 to solve tridiagonal
         # STEP 4:   define l, mu, and z first points
-        L, MU           = zeros(MVector{m}), zeros(MVector{m})
-        Z, C            = zeros(MVector{m}), zeros(MVector{m})
+        # L, MU           = zeros(MVector{m}), zeros(MVector{m})
+        L, MU           = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
+        # Z, C            = zeros(MVector{m}), zeros(MVector{m})
+        Z, C            = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
         L[1], MU[1]     = 2H[1], 0.5
         Z[1]            = ALPHA[1] / L[1]
         # STEP 5:   build lists l, mu, and z
@@ -469,7 +492,8 @@ function clamped(
         Z[m]            = (ALPHA[m] - H[n]*Z[n]) / L[m]
         C[m]            = Z[m]
         # STEP 7:   build lists c, b, and d
-        B, D            = zeros(MVector{n}), zeros(MVector{n})
+        # B, D            = zeros(MVector{n}), zeros(MVector{n})
+        B, D            = Vector{Float64}(undef, n), Vector{Float64}(undef, n)
         for i ∈ 0:1:n-1
             j    = n-i
             C[j] = Z[j] - MU[j]*C[j+1]
@@ -480,7 +504,7 @@ function clamped(
     end
     g, X, gp        = f, x, fp
     Y, A, B, C, D   = _algorithm(g, gp)
-    n, splines      = length(X) - 1, []
+    n, splines      = length(X) - 1, Vector{Function}(undef, n) # []
     for j ∈ 1:1:n
         xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
         sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
