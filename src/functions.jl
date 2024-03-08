@@ -531,7 +531,7 @@ function bezier(x::T, y::T, xguides::T, yguides::T)::Vector{Function} where {T<:
             3(xguides[i] - x[i]),
             3(x[i] + xguides[i + 1] - 2xguides[i]),
             x[i + 1] - x[i] + 3xguides[i] - 3xguides[i + 1])
-            @inbounds b = (y[i],
+        @inbounds b = (y[i],
             3(yguides[i] - y[i]),
             3(y[i] + yguides[i + 1] - 2yguides[i]),
             y[i + 1] - y[i] + 3yguides[i] - 3yguides[i + 1])
