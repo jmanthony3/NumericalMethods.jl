@@ -1,5 +1,4 @@
 using NumericalMethods
-using StaticArrays
 using Test
 
 @testset "NumericalMethods.jl" begin
