@@ -242,6 +242,17 @@ false_position(svi::SingleVariableIteration, p0::Float64, p1::Float64
 
 # Ch. 3 (p. 103)
 ## 3.1 (p. 104)
+function lagrange_coefficient(x::Vector{T}, xₖ::T, t::Num) where {T<:Float64}
+    num, den = Num[], Float64[]
+    for xₗ ∈ x
+        if isa(xₗ, Num) || xₗ != xₖ
+            push!(num, (t - xₗ))
+            push!(den, (xₖ - xₗ))
+        end
+    end
+    return prod(num) / prod(den)
+end
+
 """
     lagrange(x, f[; n=nothing])
 
@@ -258,16 +269,16 @@ function lagrange(
 )::Tuple{Function, Vector{Float64}} where {T<:Vector{Float64}}
     @variables t
     Dt = Differential(t)
-    function coefficient(x, xₖ, t)
-        num, den = Num[], Float64[]
-        for xₗ ∈ x
-            if isa(xₗ, Num) || xₗ != xₖ
-                push!(num, (t - xₗ))
-                push!(den, (xₖ - xₗ))
-            end
-        end
-        return prod(num) / prod(den)
-    end
+    # function coefficient(x, xₖ, t)
+    #     num, den = Num[], Float64[]
+    #     for xₗ ∈ x
+    #         if isa(xₗ, Num) || xₗ != xₖ
+    #             push!(num, (t - xₗ))
+    #             push!(den, (xₖ - xₗ))
+    #         end
+    #     end
+    #     return prod(num) / prod(den)
+    # end
     function error(n, ξ, t)
         s       = Num[]
         # ξ_error = zeros(MVector{n})
@@ -318,8 +329,8 @@ function lagrange(
     # errors  = zeros(MVector{n + 1})
     errors  = Vector{Float64}(undef, n + 1)
     for k ∈ 1:1:n + 1
-        # push!(terms, f[k] * coefficient(x, x[k], t))
-        @inbounds terms[k]    = f[k] * coefficient(x, x[k], t)
+        # push!(terms, f[k] * lagrange_coefficient(x, x[k], t))
+        @inbounds terms[k]    = f[k] * lagrange_coefficient(x, x[k], t)
         @inbounds errors[k]   = error(k, sum(terms[begin:k]), t)
     end
     p       = build_function(sum(terms), t, expression=Val{false})
@@ -560,20 +571,20 @@ function n1derivative(
 )::Float64 where {T<:Vector{Float64}}
     @variables t
     Dt = Differential(t)
-    function coefficient(x, xₖ, t)
-        num, den = Num[], Float64[]
-        for xₗ ∈ x
-            if isa(xₗ, Num) || xₗ != xₖ
-                push!(num, (t - xₗ))
-                push!(den, (xₖ - xₗ))
-            end
-        end
-        return prod(num) / prod(den)
-    end
+    # function coefficient(x, xₖ, t)
+    #     num, den = Num[], Float64[]
+    #     for xₗ ∈ x
+    #         if isa(xₗ, Num) || xₗ != xₖ
+    #             push!(num, (t - xₗ))
+    #             push!(den, (xₖ - xₗ))
+    #         end
+    #     end
+    #     return prod(num) / prod(den)
+    # end
     n       = (isnothing(n) ? length(x) - 1 : n)
     gp      = 0.
     for k ∈ 1:1:n + 1
-        @inbounds Lₖ          = coefficient(x, x[k], t)
+        @inbounds Lₖ          = lagrange_coefficient(x, x[k], t)
         Lₖp         = simplify(expand_derivatives(Dt(Lₖ)); expand=true)
         Lₖp_eval    = build_function(Lₖp, t, expression=Val{false})
         @inbounds gp         += f[k]*Lₖp_eval(x[j])
