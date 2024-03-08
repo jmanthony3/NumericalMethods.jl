@@ -273,7 +273,7 @@ function lagrange(
         # ξ_error = zeros(MVector{n})
         ξ_error = Vector{Float64}(undef, n)
         for i ∈ 1:1:n
-            push!(s, t - x[i])
+            @inbounds push!(s, t - x[i])
             g               = simplify(prod(s); expand=true)
             g_eval          = build_function(g, t, expression=Val{false})
             gp              = simplify(expand_derivatives(Dt(g)); expand=true)
@@ -302,13 +302,13 @@ function lagrange(
                 end
                 maximum(abs.(R))
             end
-            for k ∈ 1:1:i
+            for _ ∈ 1:1:i
                 ξ = simplify(expand_derivatives(Dt(ξ)); expand=true)
             end
             dξ              = maximum(
                 build_function(ξ, t; expression=Val{false}).(x[begin:i])
                     ./ (factorial(n)))
-            ξ_error[i]      = dξ * abs(gx)
+            @inbounds ξ_error[i]      = dξ * abs(gx)
         end
         return maximum(abs.(ξ_error))
     end
@@ -319,14 +319,14 @@ function lagrange(
     errors  = Vector{Float64}(undef, n + 1)
     for k ∈ 1:1:n + 1
         # push!(terms, f[k] * coefficient(x, x[k], t))
-        terms[k]    = f[k] * coefficient(x, x[k], t)
-        errors[k]   = error(k, sum(terms[begin:k]), t)
+        @inbounds terms[k]    = f[k] * coefficient(x, x[k], t)
+        @inbounds errors[k]   = error(k, sum(terms[begin:k]), t)
     end
     p       = build_function(sum(terms), t, expression=Val{false})
     return p, errors
 end
 
-function lagrange(
+@inline function lagrange(
     x::T,
     f::T;
     n::Union{Integer, Nothing}  = nothing
@@ -363,17 +363,17 @@ function newtondifference(
     fxn[:, 1], fxn[:, 2] = x, f
     for j ∈ 2:1:m, i ∈ j:1:m
         fₖ = fterm(fxn, i, j)
-        fxn[i, j + 1] = fₖ
+        @inbounds fxn[i, j + 1] = fₖ
         if dir == :forward && i == j
-            coeff[j - 1] = fₖ
+            @inbounds coeff[j - 1] = fₖ
         elseif dir == :backward && i == m
-            coeff[j - 1] = fₖ
+            @inbounds coeff[j - 1] = fₖ
         end
     end
     @variables t
     k, g, terms = (dir == :forward ? 1 : m), 0., 1.
     for c ∈ coeff
-        terms  *= (t - x[k])
+        @inbounds terms  *= (t - x[k])
         g      += c * terms
         k      += (dir == :forward ? 1 : -1)
     end
@@ -398,7 +398,7 @@ function natural(
         # H               = zeros(MVector{n})
         H               = Vector{Float64}(undef, n)
         for i ∈ 1:1:n
-            H[i] = X[i+1] - X[i]
+            @inbounds H[i] = X[i+1] - X[i]
         end
         # STEP 2:   build list, alpha_i
         # A, ALPHA        = Y, zeros(MVector{m})
@@ -406,7 +406,7 @@ function natural(
         # ALPHA[1]        = 3*(A[2] - A[1])/H[1] - 3*AP[1]
         # ALPHA[m]        = 3*AP[m] - 3*(A[m] - A[n])/H[n]
         for i ∈ 2:1:n
-            ALPHA[i] = 3/H[i]*(A[i+1] - A[i]) - 3/H[i-1]*(A[i] - A[i-1])
+            @inbounds ALPHA[i] = 3/H[i]*(A[i+1] - A[i]) - 3/H[i-1]*(A[i] - A[i-1])
         end
         # Algorithm 6.7 to solve tridiagonal
         # STEP 3:   define l, mu, and z first points
@@ -414,23 +414,23 @@ function natural(
         L, MU           = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
         # Z, C            = zeros(MVector{m}), zeros(MVector{m})
         Z, C            = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
-        L[1], MU[1], Z[1]= 1., 0, 0.
+        @inbounds L[1], MU[1], Z[1]= 1., 0, 0.
         # STEP 4:   build lists l, mu, and z
         for i ∈ 2:1:n
-            L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
-            MU[i] = H[i] / L[i]
-            Z[i]  = (ALPHA[i] - H[i-1]*Z[i-1]) / L[i]
+            @inbounds L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
+            @inbounds MU[i] = H[i] / L[i]
+            @inbounds Z[i]  = (ALPHA[i] - H[i-1]*Z[i-1]) / L[i]
         end
         # STEP 5:   define l, z, and c endpoints
-        L[m], Z[m], C[m]= 1., 0., 0.
+        @inbounds L[m], Z[m], C[m]= 1., 0., 0.
         # STEP 6:   build lists c, b, and d
         # B, D            = zeros(MVector{n}), zeros(MVector{n})
         B, D            = Vector{Float64}(undef, n), Vector{Float64}(undef, n)
         for i ∈ 0:1:n-1
             j    = n-i
-            C[j] = Z[j] - MU[j]*C[j+1]
-            B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2C[j])/3
-            D[j] = (C[j+1] - C[j]) / 3H[j]
+            @inbounds C[j] = Z[j] - MU[j]*C[j+1]
+            @inbounds B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2C[j])/3
+            @inbounds D[j] = (C[j+1] - C[j]) / 3H[j]
         end
         return Y, A, B, C, D
     end
@@ -439,9 +439,9 @@ function natural(
     n               = length(X) - 1
     splines         = Vector{Function}(undef, n) # []
     for j ∈ 1:1:n
-        xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
+        @inbounds xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
         sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
-        splines[j] = sj
+        @inbounds splines[j] = sj
     end
     return Y, splines
 end
@@ -463,16 +463,16 @@ function clamped(
         # H               = zeros(MVector{n})
         H               = Vector{Float64}(undef, n)
         for i ∈ 1:1:n
-            H[i] = X[i+1] - X[i]
+            @inbounds H[i] = X[i+1] - X[i]
         end
         # STEP 2:   define alpha list endpoints
         # A, AP, ALPHA    = Y, YP, zeros(MVector{m})
         A, AP, ALPHA    = Y, YP, Vector{Float64}(undef, m)
-        ALPHA[1]        = 3(A[2] - A[1])/H[1] - 3AP[1]
-        ALPHA[m]        = 3AP[m] - 3(A[m] - A[n])/H[n]
+        @inbounds ALPHA[1]        = 3(A[2] - A[1])/H[1] - 3AP[1]
+        @inbounds ALPHA[m]        = 3AP[m] - 3(A[m] - A[n])/H[n]
         # STEP 3:   build list, alpha_i
         for i ∈ 2:1:n
-            ALPHA[i] = 3/H[i]*(A[i+1] - A[i]) - 3/H[i-1]*(A[i] - A[i-1])
+            @inbounds ALPHA[i] = 3/H[i]*(A[i+1] - A[i]) - 3/H[i-1]*(A[i] - A[i-1])
         end
         # Algorithm 6.7 to solve tridiagonal
         # STEP 4:   define l, mu, and z first points
@@ -480,26 +480,26 @@ function clamped(
         L, MU           = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
         # Z, C            = zeros(MVector{m}), zeros(MVector{m})
         Z, C            = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
-        L[1], MU[1]     = 2H[1], 0.5
-        Z[1]            = ALPHA[1] / L[1]
+        @inbounds L[1], MU[1]     = 2H[1], 0.5
+        @inbounds Z[1]            = ALPHA[1] / L[1]
         # STEP 5:   build lists l, mu, and z
         for i ∈ 2:1:n
-            L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
-            MU[i] = H[i]/L[i]
-            Z[i]  = (ALPHA[i] - H[i-1]*Z[i-1])/L[i]
+            @inbounds L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
+            @inbounds MU[i] = H[i]/L[i]
+            @inbounds Z[i]  = (ALPHA[i] - H[i-1]*Z[i-1])/L[i]
         end
         # STEP 6:   define l, z, and c endpoints
-        L[m]            = H[n] * (2 - MU[n])
-        Z[m]            = (ALPHA[m] - H[n]*Z[n]) / L[m]
-        C[m]            = Z[m]
+        @inbounds L[m]            = H[n] * (2 - MU[n])
+        @inbounds Z[m]            = (ALPHA[m] - H[n]*Z[n]) / L[m]
+        @inbounds C[m]            = Z[m]
         # STEP 7:   build lists c, b, and d
         # B, D            = zeros(MVector{n}), zeros(MVector{n})
         B, D            = Vector{Float64}(undef, n), Vector{Float64}(undef, n)
         for i ∈ 0:1:n-1
             j    = n-i
-            C[j] = Z[j] - MU[j]*C[j+1]
-            B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2*C[j])/3
-            D[j] = (C[j+1] - C[j]) / 3H[j]
+            @inbounds C[j] = Z[j] - MU[j]*C[j+1]
+            @inbounds B[j] = (A[j+1] - A[j])/H[j] - H[j]*(C[j+1] + 2*C[j])/3
+            @inbounds D[j] = (C[j+1] - C[j]) / 3H[j]
         end
         return Y, A, B, C, D
     end
@@ -508,9 +508,9 @@ function clamped(
     n               = length(X) - 1
     splines         = Vector{Function}(undef, n) # []
     for j ∈ 1:1:n
-        xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
+        @inbounds xj, aj, bj, cj, dj = X[j], A[j], B[j], C[j], D[j]
         sj(x) = aj + bj*(x - xj) + cj*(x - xj)^2 + dj*(x - xj)^3
-        splines[j] = sj
+        @inbounds splines[j] = sj
     end
     return Y, splines
 end
@@ -527,11 +527,11 @@ Each argument should be a one-to-one mapping of points, (xᵢ, yᵢ) and (xᵢ�
 function bezier(x::T, y::T, xguides::T, yguides::T)::Vector{Function} where {T<:AbstractVector}
     n, curves = length(x) - 1, []
     for i ∈ 1:1:n
-        a = (x[i],
+        @inbounds a = (x[i],
             3(xguides[i] - x[i]),
             3(x[i] + xguides[i + 1] - 2xguides[i]),
             x[i + 1] - x[i] + 3xguides[i] - 3xguides[i + 1])
-        b = (y[i],
+            @inbounds b = (y[i],
             3(yguides[i] - y[i]),
             3(y[i] + yguides[i + 1] - 2yguides[i]),
             y[i + 1] - y[i] + 3yguides[i] - 3yguides[i + 1])
@@ -573,15 +573,15 @@ function n1derivative(
     n       = (isnothing(n) ? length(x) - 1 : n)
     gp      = 0.
     for k ∈ 1:1:n + 1
-        Lₖ          = coefficient(x, x[k], t)
+        @inbounds Lₖ          = coefficient(x, x[k], t)
         Lₖp         = simplify(expand_derivatives(Dt(Lₖ)); expand=true)
         Lₖp_eval    = build_function(Lₖp, t, expression=Val{false})
-        gp         += f[k]*Lₖp_eval(x[j])
+        @inbounds gp         += f[k]*Lₖp_eval(x[j])
     end
     return gp
 end
 
-function n1derivative(
+@inline function n1derivative(
     x::T,
     f::T,
     j::Integer;
@@ -604,7 +604,7 @@ function endpoint(
     method  ::Symbol    = :three
 )::Float64 where {T<:Vector{Float64}}
     i = (point == :begin ? 1 : (point == :end ? length(x) : nothing))
-    if point == :begin
+    @inbounds return if point == :begin
         if method == :three
             (-3f[i] + 4f[i+1] - f[i+2]) / 2h
         elseif method == :five
@@ -629,7 +629,7 @@ function endpoint(
     end
 end
 
-function endpoint(
+@inline function endpoint(
     x       ::T,
     f       ::T,
     h       ::Real,
@@ -653,7 +653,7 @@ function midpoint(
     method  ::Symbol    = :three
 )::Float64 where {T<:Vector{Float64}}
     i = point
-    return if method == :three
+    @inbounds return if method == :three
         (f[i + 1] - f[i - 1]) / 2h
     elseif method == :five
         (f[i - 2] - 8f[i - 1]
@@ -665,7 +665,7 @@ function midpoint(
     end
 end
 
-function midpoint(
+@inline function midpoint(
     x       ::T,
     f       ::T,
     h       ::Real,
@@ -699,7 +699,7 @@ function integrate(
     tol     ::Real      = 10^-3
 )::AbstractFloat
     is_function = isa(f, Function)
-    a, b, n     = x[begin], x[end], length(x) - 1
+    @inbounds a, b, n     = x[begin], x[end], length(x) - 1
     if is_function
         n_min = if rule == :trapezoidal
             ceil(sqrt((b - a)^3 / (12 * tol)))
@@ -710,17 +710,17 @@ function integrate(
         end
     end
     if rule ∈ [:simpson13, :midpoint] && isodd(n)
-        F           = integrate(is_function ? f : f[n:end], x[n:end], rule=:trapezoidal)
-        x           = x[begin:n]
-        a, b, n     = x[begin], x[end], length(x) - 1
+        @inbounds F           = integrate(is_function ? f : f[n:end], x[n:end], rule=:trapezoidal)
+        @inbounds x           = x[begin:n]
+        @inbounds a, b, n     = x[begin], x[end], length(x) - 1
     elseif rule == :simpson38 && n % 3 != 0
         m           = n - (n % 3 - 1)
-        F           = integrate(is_function ? f : f[m:end], x[m:end], rule=:trapezoidal)
-        x           = x[begin:m]
-        a, b, n     = x[begin], x[end], length(x) - 1
+        @inbounds F           = integrate(is_function ? f : f[m:end], x[m:end], rule=:trapezoidal)
+        @inbounds x           = x[begin:m]
+        @inbounds a, b, n     = x[begin], x[end], length(x) - 1
     elseif rule == :simpsonN && isodd(n)
-        hn2, hn1    = x[n] - x[n - 1], x[n + 1] - x[n]
-        fn2, fn1, fn = is_function ? f.(x[n - 1:n + 1]) : f[n - 1:n + 1]
+        @inbounds hn2, hn1    = x[n] - x[n - 1], x[n + 1] - x[n]
+        @inbounds fn2, fn1, fn = is_function ? f.(x[n - 1:n + 1]) : f[n - 1:n + 1]
         alpha       = (2hn1^2 + 3hn1*hn2) / 6(hn2 + hn1)
         beta        = (hn1^2 + 3hn1*hn2) / 6hn2
         eta         = (hn1^3) / (6hn2 * (hn2 + hn1))
@@ -732,50 +732,50 @@ function integrate(
         h           = (b - a) / n
         z           = 0.
         for j ∈ 2:1:n
-            z += (is_function ? f(x[j]) : f[j])
+            @inbounds z += (is_function ? f(x[j]) : f[j])
         end
         F          += if is_function
             h/2*(f(a) + 2z + f(b))
         else
-            h/2*(f[begin] + 2z + f[end])
+            @inbounds h/2*(f[begin] + 2z + f[end])
         end
     elseif rule == :simpson13
         h           = (b - a) / n
         z1          = 0.
         for j ∈ 2:1:(n ÷ 2)
-            z1 += (is_function ? f(x[2j - 1]) : f[2j - 1])
+            @inbounds z1 += (is_function ? f(x[2j - 1]) : f[2j - 1])
         end
         z2          = 0.
         for j ∈ 1:1:(n ÷ 2)
-            z2 += is_function ? f(x[2j]) : f[2j]
+            @inbounds z2 += is_function ? f(x[2j]) : f[2j]
         end
         F          += if is_function
             h/3*(f(a) + 2z1 + 4z2 + f(b))
         else
-            h/3*(f[begin] + 2z1 + 4z2 + f[end])
+            @inbounds h/3*(f[begin] + 2z1 + 4z2 + f[end])
         end
     elseif rule == :simpson38
         h           = (b - a) / n
         z1          = 0.
         for j ∈ 2:1:n
             if j % 3 != 0
-                z1 += (is_function ? f(x[j]) : f[j])
+                @inbounds z1 += (is_function ? f(x[j]) : f[j])
             end
         end
         z3          = 0.
         for j ∈ 1:1:(n ÷ 3)
-            z3 += (is_function ? f(x[3j]) : f[3j])
+            @inbounds z3 += (is_function ? f(x[3j]) : f[3j])
         end
         F          += if is_function
             3h/8*(f(a) + 3z1 + 2z3 + f(b))
         else
-            3h/8*(f[begin] + 3z1 + 2z3 + f[end])
+            @inbounds 3h/8*(f[begin] + 3z1 + 2z3 + f[end])
         end
     elseif rule == :simpsonN
         h           = (b - a) / n
         for j ∈ 0:1:(n ÷ 2) - 1
-            h2j0, h2j1 = x[2j + 2] - x[2j + 1], x[2j + 3] - x[2j + 2]
-            f2j0, f2j1, f2j2 = is_function ? f.(x[2j + 1:2j + 3]) : f[2j + 1:2j + 3]
+            @inbounds h2j0, h2j1 = x[2j + 2] - x[2j + 1], x[2j + 3] - x[2j + 2]
+            @inbounds f2j0, f2j1, f2j2 = is_function ? f.(x[2j + 1:2j + 3]) : f[2j + 1:2j + 3]
             F += 6 \ (h2j0 + h2j1) * (
                 (2 - h2j1 / h2j0) * f2j0
                     + ((h2j0 * h2j1) \ (h2j0 + h2j1)^2) * f2j1
@@ -785,14 +785,14 @@ function integrate(
         h           = (b - a) / (n + 2)
         z           = 0.
         for j ∈ 1:1:(n ÷ 2)
-            z += (is_function ? f(x[2j]) : f[2j])
+            @inbounds z += (is_function ? f(x[2j]) : f[2j])
         end
         F          += 2h*z
     end
     return F
 end
 
-function integrate(
+@inline function integrate(
     f       ::Union{AbstractVector, Function},
     a       ::Real,
     b       ::Real,
@@ -803,7 +803,7 @@ function integrate(
     return integrate(f, float.(a:h:b), rule=rule, tol=tol)
 end
 
-function integrate(
+@inline function integrate(
     f       ::Union{AbstractVector, Function},
     a       ::Real,
     b       ::Real,
@@ -850,7 +850,7 @@ method::Symbol=:forward_euler, tol::Real=10^-3)::AbstractVector
     t, h, w = ivp.a, ivp.h, ivp.α
     ea, eb, λ = 1/2, 1/2, 1
     g       = zeros(MVector{ivp.N + 1})
-    g[1]    = w
+    @inbounds g[1]    = w
     for i ∈ 1:1:ivp.N
         w += if method == :forward_euler
             h * f(t, w)
@@ -865,23 +865,18 @@ method::Symbol=:forward_euler, tol::Real=10^-3)::AbstractVector
             k4 = h * f(t + h,   w + k3)
             (k1 + 2k2 + 2k3 + k4) / 6
         end
-        g[i + 1] = w
+        @inbounds g[i + 1] = w
         # push!(increments, w - w0)
         t   = ivp.a + i*h
     end
     return g
 end
 
-forward_euler(ivp::InitialValueProblem;
-tol=10^-3) = solve(ivp; tol=tol, method=:forward_euler)
-backward_euler(ivp::InitialValueProblem;
-tol=10^-3) = solve(ivp; tol=tol, method=:backward_euler)
-improved_euler(ivp::InitialValueProblem;
-tol=10^-3) = solve(ivp; tol=tol, method=:improved_euler)
-modified_euler(ivp::InitialValueProblem;
-tol=10^-3) = solve(ivp; tol=tol, method=:modified_euler)
-runge_kutta(ivp::InitialValueProblem;
-tol=10^-3) = solve(ivp; tol=tol, method=:runge_kutta)
+forward_euler(ivp::InitialValueProblem;     tol=10^-3) = solve(ivp; tol=tol, method=:forward_euler)
+backward_euler(ivp::InitialValueProblem;    tol=10^-3) = solve(ivp; tol=tol, method=:backward_euler)
+improved_euler(ivp::InitialValueProblem;    tol=10^-3) = solve(ivp; tol=tol, method=:improved_euler)
+modified_euler(ivp::InitialValueProblem;    tol=10^-3) = solve(ivp; tol=tol, method=:modified_euler)
+runge_kutta(ivp::InitialValueProblem;       tol=10^-3) = solve(ivp; tol=tol, method=:runge_kutta)
 
 # Ch. 8 (p. 505)
 ## 8.1 (p. 506)
@@ -907,17 +902,17 @@ function linearleastsquares(
     for i ∈ 0:1:n
         for j ∈ 0:1:n
             for k ∈ 1:1:m
-                A[i+1,j+1] += X[k]^(i + j)
+                @inbounds A[i+1,j+1] += X[k]^(i + j)
             end
         end
         for j ∈ 1:1:m
-            b[i+1] += Y[j]*X[j]^i
+            @inbounds b[i+1] += Y[j]*X[j]^i
         end
     end
     @variables t
     x, p    = A\b, 0.
     for i ∈ 0:1:n
-        p  += x[i+1]*t^i
+        @inbounds p  += x[i+1]*t^i
     end
     p       = build_function(p, t, expression=Val{false})
     error   = sum((Y - p.(X)) .^ 2)
@@ -942,10 +937,10 @@ function linearleastsquares(
         q3      = zeros(MVector{m})
         q4      = zeros(MVector{m})
         for i ∈ 1:1:m
-            q1[i] = log(X[i])*log(Y[i])
-            q2[i] = log(X[i])
-            q3[i] = log(Y[i])
-            q4[i] = log(X[i])^2
+            @inbounds q1[i] = log(X[i])*log(Y[i])
+            @inbounds q2[i] = log(X[i])
+            @inbounds q3[i] = log(Y[i])
+            @inbounds q4[i] = log(X[i])^2
         end
         num     = m*sum(q1) - sum(q2)*sum(q3)
         den     = m*sum(q4) - sum(q2)^2
