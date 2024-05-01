@@ -7,7 +7,7 @@
 Find the definite integral by some numerical quadrature.
 
 # Notes
-`f` may be a function or range.
+`f` may be a function or vector.
 The domain may be defined with a vector, `x` or on the interval [`a`, `b`] either by number of sub-intervals, `n` or step-size, `h`.
 `rule` accepts {`:trapezoidal` (default), `:midpoint`, `:simpson13`, `:simpson38`, `:simpsonN`}.
 Dataset may contain unevenly spaces points.

@@ -4,7 +4,7 @@ using StaticArrays
 """
     InitialValueProblem(f, a, b, h, α, N)
 
-Structure of the boundary conditions to Initial-Value Problem (IVP) differential equation.
+Structure of the boundary conditions to **Initial-Value Problem** (IVP) differential equation.
 
 # Notes
 Make sure the independent variable (e.g. time) is the first argument of `f`!
@@ -23,7 +23,7 @@ end
 Solve `ivp` according to `method` ∈ {`:forward_euler` (default), `:backward_euler`, `:improved_euler`, `:modified_euler`, `:runge_kutta`}.
 
 # Notes
-Each method has an equivalent convenience function.
+Each `method` has an equivalent convenience function.
 E.g. `solve(ivp; method=:runge_kutta)` ≡ `runge_kutta(ivp)`.
 """
 function solve(ivp::InitialValueProblem;

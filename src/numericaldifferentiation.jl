@@ -8,7 +8,7 @@ using Symbolics
 The general (n + 1)-point formula to approximate f' at point `j`.
 
 # Notes
-If `n = nothing`, then entire dataset used to construct `n`th Lagrange coefficient.
+If `n = nothing`, then entire dataset used to construct `n`'th Lagrange coefficient.
 """
 function n1derivative(x::Vector{T}, f::Vector{T}, j::Int64;
         n::Union{Int64, Nothing}=nothing)::Float64 where {T<:Float64}

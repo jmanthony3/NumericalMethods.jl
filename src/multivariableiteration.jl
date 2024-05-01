@@ -6,7 +6,7 @@ using Symbolics
 """
     MultiVariableIteration(A, x, b, N, tol)
 
-Given the system of equations, \$\\mathbf{A}\\vec{x} = \\vec{b}\$, attempt to solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ in so many iterations, `N` within tolerance, `tol`.
+Given the system of equations, ``\\mathbf{A}\\vec{x} = \\vec{b}``, attempt to solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` in so many iterations, `N` within tolerance, `tol`.
 *Ideal for large, sparse systems.*
 """
 struct MultiVariableIteration{T<:Real}
@@ -39,7 +39,7 @@ end
 Finds the spectral radius of matrix, `A`.
 
 # Notes
-\$\\rho(\\mathbf{A}) = \\max|\\lambda|\$, where \$\\lambda\$ is the set of eigvalsvalues for `A` [burdenNumericalAnalysis2016]_.
+``ρ(\\mathbf{A}) = \\max|λ|``, where λ is the set of eigvalsvalues for `A` [burdenNumericalAnalysis2016]_.
 """
 spectral_radius(A::Matrix) = maximum(abs.(eigvals(A)))
 
@@ -50,11 +50,13 @@ Find the condition number of matrix, `A`.
 
 # Notes
 Definition [burdenNumericalAnalysis2016]_:
-The condition number of the non-singular matrix, \$\\mathbf{A}\$ relative to a norm, \$||\\cdot||\$ is
+The condition number of the non-singular matrix, ``\\mathbf{A}`` relative to a norm, ||⋅|| is
 
-\$\$K(\\mathbf{A}) = ||\\mathbf{A}|| \\cdot ||\\mathbf{A}^{-1}||\$\$
+```math
+    K(\\mathbf{A}) = ||\\mathbf{A}|| ⋅ ||\\mathbf{A}^{-1}||
+```
 
-A matrix is well-conditioned if \$K(\\mathbf{A})\$ is close to 1 and is ill-conditioned if significantly greater than 1.
+A matrix is well-conditioned if ``K(\\mathbf{A})`` is close to 1 and is ill-conditioned if significantly greater than 1.
 """
 condition_number(A::Matrix) = norm(A) * norm(inv(A))
 
@@ -99,11 +101,11 @@ __find_xk(T, x, c) = T * x + c
 """
     find_omega(mvi[, omega=0.])
 
-Find the optimum relaxation parameter, \$\\omega\$ for `mvi.A` and `mvi.x`, if possible.
+Find the optimum relaxation parameter, `omega` for `mvi.A` and `mvi.x`, if possible.
 
 # Notes
 If 0 < `omega` < 2, then method will converge regardless of choice for `mvi.x`.
-If matrix, `mvi.A` is tridiagonal, then the spectral radius of Gauss-Seidel's T-matrix, \$\\mathbf{T}\\_{g}\$ is used to calculate \$\\omega := 2 / (1 + \\sqrt{(1 - `spectral_radius`(\\mathbf{T}\\_{g})})\$ [burdenNumericalAnalysis2016]_.
+If matrix, `mvi.A` is tridiagonal, then the spectral radius of Gauss-Seidel's T-matrix, ``\\mathbf{T}\\_{g}`` is used to calculate ``ω := 2 / (1 + \\sqrt{(1 - `spectral_radius`(\\mathbf{T}\\_{g})})`` [burdenNumericalAnalysis2016]_.
 """
 function find_omega(mvi::MultiVariableIteration, omega::Float64=0.)::Float64
     n, m = size(mvi.A)
@@ -151,8 +153,10 @@ end
 """
     solve(mvi::MultiVariableIteration[; method=:jacobi, omega=0., variables])
 
-Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ according to `method` ∈ {`:jacobi` (default), `:gauss_seidel`, `:successive_relaxation`, `:newton_raphson`}.
-Each `method` also has a convenience function.
+Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` according to `method` ∈ {`:jacobi` (default), `:gauss_seidel`, `:successive_relaxation`, `:newton_raphson`}.
+
+Each `method` has an equivalent convenience function.
+E.g. `solve(mvi; method=:jacobi)` ≡ `jacobi(ivp)`.
 """
 function solve(mvi::MultiVariableIteration;
         method      ::Symbol                            = :jacobi,
@@ -205,38 +209,36 @@ end
 """
     gauss_seidel(mvi)
 
-Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Gauss-Seidel Method**.
+Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Gauss-Seidel Method**.
 
 # Notes
 This method improves on `jacobi()` by using the most recently calculated entries in the approximation vector, `x` at the end of each iteration.
 The core algorithm by which method marches through iterations:
-
-\$\$
-    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} * \\mathbf{U} \\bigr) \\cdot
-        \\vec{x}^{(k - 1)} + \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} \\bigr) \\cdot \\vec{b}
-\$\$
+```math
+    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} * \\mathbf{U} \\bigr) ⋅
+        \\vec{x}^{(k - 1)} + \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} \\bigr) ⋅ \\vec{b}
+```
 """
 gauss_seidel(mvi::MultiVariableIteration) = solve(mvi; method=:gauss_seidel)
 
 """
     jacobi(mvi)
 
-Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Jacobi Method** to find \$\\vec{x}\$.
+Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Jacobi Method** to find ``\\vec{x}``.
 
 # Notes
 The core algorithm by which method marches through iterations:
-
-\$\$
-    \\vec{x}^{(k)} = \\bigl( \\mathbf{D}^{-1} * (\\mathbf{L} + \\mathbf{U}) \\bigr) \\cdot
-        \\vec{x}^{(k - 1)} + ( \\mathbf{D}^{-1} ) \\cdot \\vec{b}
-\$\$
+```math
+    \\vec{x}^{(k)} = \\bigl( \\mathbf{D}^{-1} * (\\mathbf{L} + \\mathbf{U}) \\bigr) ⋅
+        \\vec{x}^{(k - 1)} + ( \\mathbf{D}^{-1} ) ⋅ \\vec{b}
+```
 """
 jacobi(mvi::MultiVariableIteration) = solve(mvi; method=:jacobi)
 
 """
     newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}})
 
-Solve non-linear systems of equations, \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Newton-Raphson Method**.
+Solve non-linear systems of equations, ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Newton-Raphson Method**.
 
 Here, `mvi.A` should be a vector of functions wherein each variable is represented.
 
@@ -269,18 +271,17 @@ method=:newton_raphson, variables=variables)
 """
     successive_relaxation(mvi[, omega=0.])
 
-Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Successive Relaxation Method**.
+Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Successive Relaxation Method**.
 Method is Successive Over-Relaxation (SOR) if `omega` > 1, Successive Under-Relaxation (SUR) if `omega` < 1, and reduces to Gauss-Seidel if `omega` = 1.
 
 # Notes
 SOR and SUR accelerate or deccelerate convergence of `gauss_seidel()`, respectively, by decreasing or increasing the spectral radius of `mvi.A`.
 The core algorithm by which method marches through iterations:
+```math
+    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - ω\\mathbf{L})^{-1} * ((1 - ω)*\\mathbf{D} + ω\\mathbf{U}) \\bigr) ⋅
+        \\vec{x}^{(k - 1)} + ω( (\\mathbf{D} - ω\\mathbf{L})^{-1} ) ⋅ \\vec{b}
+```
 
-\$\$
-    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\omega\\mathbf{L})^{-1} * ((1 - \\omega)*\\mathbf{D} + \\omega\\mathbf{U}) \\bigr) \\cdot
-        \\vec{x}^{(k - 1)} + \\omega( (\\mathbf{D} - \\omega\\mathbf{L})^{-1} ) \\cdot \\vec{b}
-\$\$
-
-If left unspecified, and if possible, an optimum relaxation parameter, \$\\omega\$ will be calculated by `find_omega()`.
+If left unspecified, and if possible, an optimum relaxation parameter, ω will be calculated by `find_omega()`.
 """
 successive_relaxation(mvi::MultiVariableIteration, omega::Float64=0.) = solve(mvi; method=:successive_relaxation, omega=omega)

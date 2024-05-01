@@ -149,7 +149,7 @@ Root-finding method: f(x) = 0.
 Search for solution by halving the bounds such that `a` and `b` initially yield opposite signs in function.
 
 # Notes
-Relying on the Intermediate Value Theorem (IVT), this is a bracketed, root-finding method.
+Relying on the **Intermediate Value Theorem** (IVT), this is a bracketed, root-finding method.
 This method is rather slow to converge but will always converge to a solution; therefore, is a good starter method.
 """
 bisection(svi::SingleVariableIteration) = solve(svi; method=:bisection)
@@ -170,8 +170,7 @@ Theorem:
     If g ∈ C[a,b] and g(x) ∈ C[a, b] for all x ∈ [a, b], then function, g has a fixed point, p ∈ [a, b].
 2) Uniqueness of a fixed point:
     If g'(x) exists on [a, b] and a positive constant, k < 1 exist with {|g'(x)| ≤ k | x ∈ (a, b)}, then there is exactly one fixed-point, p ∈ [a, b].
-
-Converges by mathcal{O}(text{linear}) if g'(p) ≠ 0, and mathcal{O}(text{quadratic}) if g'(p) = 0 and g''(p) < M, where M = g''(ξ) that is the error function.
+Converges by ``\\mathcal{O}(\\text{linear})`` if g'(p) ≠ 0, and ``\\mathcal{O}(\\text{quadratic})`` if g'(p) = 0 and g''(p) < M, where M = g''(ξ) that is the error function.
 """
 fixed_point(svi::SingleVariableIteration, p0::Float64) = solve(svi; method=:fixed_point, p0=p0)
 
@@ -179,7 +178,8 @@ fixed_point(svi::SingleVariableIteration, p0::Float64) = solve(svi; method=:fixe
 """
     newton_raphson(svi::SingleVariableIteration, p0[; df=nothing])
 
-Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0. `df` will be the first derivative of function if not given.
+Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
+`df` will be the first derivative of function if not given.
 
 **Use function with lowest slope!**
 
@@ -190,7 +190,8 @@ Quickest convergence rate, but not root-bracketed and has trouble with symmetric
 Initial guess, `p0` must be close to real solution; else, will converge to different root or oscillate (if symmetric).
 This method can be viewed as fixed-point iteration.
 
-Technique based on first Taylor polynomial expansion of f about p_{0} (that is `p0`) and evaluated at x = p. |p - p_{0}| is assumed small; therefore, 2^{\text{nd}}-order Taylor term, the error, is small.
+Technique based on first Taylor polynomial expansion of f about ``p_{0}`` (that is `p0`) and evaluated at x = p.
+|p - ``p_{0}``| is assumed small; therefore, 2ⁿᵈ-order Taylor term, the error, is small.
 
 See `fixed_point()` for theorem.
 """
