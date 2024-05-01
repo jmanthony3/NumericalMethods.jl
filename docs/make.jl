@@ -1,7 +1,7 @@
-using NumericalMethods
 using Documenter
+using NumericalMethods
 
-DocMeta.setdocmeta!(NumericalMethods, :DocTestSetup, :(using NumericalMethods); recursive=true)
+DocMeta.setdocmeta!(NumericalMethods, :DocTestSetup, :(using NumericalMethods); recursive=false)
 
 makedocs(;
     modules=[NumericalMethods],
@@ -17,6 +17,11 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Single-Variable Iteration" => "singlevariableiteration.md",
+        "Initial-Value Problem" => "initialvalueproblem.md",
+        "Numerical Differentiation" => "numericaldifferentiation.md",
+        "Numerical Integration" => "numericalintegration.md",
+        "Multi-Variable Iteration" => "multivariableiteration.md"
     ],
 )
 
