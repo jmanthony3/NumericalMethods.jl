@@ -311,39 +311,35 @@ The core algorithm by which method marches through iterations:
 """
 jacobi(mvi::MultiVariableIteration) = solve(mvi; method=:jacobi)
 
-"""Employ the Newton-Raphson Method to find solution of non-linear systems of equations within tolerance.
+"""
+    newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}})
 
-Parameters
-----------
-variables : tuple
-    Collection of string representations for variables to respect in derivations.
+Solve non-linear systems of equations, \$\\vec{A}\\vec{x} = \\vec{b}\$ via the Newton-Raphson Method to find \$\\vec{x}\$.
 
-Attributes
-----------
-iterations, approximations, errors : np.ndarray
-    Collection of iterations, approximations, and normative errors through method.
+Here, `mvi.A` should be a vector of functions wherein each variable is represented.
 
-Raises
-------
-TypeError
-    If an element of `variables` is not of type string.
+# Examples
 
-Notes
------
-Modified form of `MultiVariableIteration` to analyze a one-dimensional array of non-linear SOE. Each element should be a lambda expression wherein each variable is represented.
+```jldoctest; output=false
+f1(x1, x2, x3)  = 3x1 - cos(x2*x3) - 0.5
+f2(x1, x2, x3)  = x1^2 - 81(x2 + 0.1)^2 + sin(x3) + 1.06
+f3(x1, x2, x3)  = exp(-x1*x2) + 20x3 + 3\\(10π - 3)
+A               = [f1, f2, f3]
+b               = zeros(length(A))
+x0              = [0.1, 0.1, -0.1]
+tol             = 1e-9
+mvi             = MultiVariableIteration(A, x0, b, 5, tol)
+using Symbolics
+@variables x1, x2, x3
+newton_raphson(mvi, (x1, x2, x3))
 
-Examples 
---------
->>> A = [lambda x1, x2, x3: 3*x1 - sympy.cos(x2*x3) - 1/2,
-    lambda x1, x2, x3: x1**2 - 81*(x2 + 0.1)**2
-        + sympy.sin(x3) + 1.06,
-    lambda x1, x2, x3: sympy.exp(-x1*x2)
-        + 20*x3 + (10*math.pi - 3)/3
-    ]
->>> x, b = (0.1, 0.1, -0.1), (0, 0, 0)
->>> variables = ("x1", "x2", "x3")
->>> MultiVariableIteration(A, x, b).newton_raphson(variables)["Approximations"].values[-1]
-[0.5, 0., -0.52359877]
+# output
+
+3-element Vector{Float64}:
+  0.5
+ -1.176161909134556e-19
+ -0.5235987755982989
+```
 """
 newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}}) = solve(mvi;
 method=:newton_raphson, variables=variables)
