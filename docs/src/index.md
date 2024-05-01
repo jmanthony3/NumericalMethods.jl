@@ -12,6 +12,14 @@ Documentation for [NumericalMethods](https://github.com/jmanthony3/NumericalMeth
 ## Functions
 ```@autodocs
 Modules = [NumericalMethods]
+Private = false
+Pages   = [
+    "functions.jl",
+    "singlevariableiterations.jl",
+    "initialvalueproblem.jl",
+    "numericaldifferentiation.jl",
+    "numericalintegration.jl",
+    "multivariableiteration.jl"]
 ```
 
 ## Index
