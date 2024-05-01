@@ -4,95 +4,11 @@ using Symbolics
 
 # Ch. 7 (p. 437)
 """
-    MultiVariableIteration(f, a, b, n, tol)
+    MultiVariableIteration(A, x, b, N, tol)
 
-Given `f`(p) such that p ∈ [`a`, `b`], find the root of a single-variable equation in so many iterations, `n` within tolerance, `tol`.
-
----
-
-Iteratively find the solution to a system of equations (SOE): \$\\mathbf{A}\\vec{x} = \\vec{b}\$. Ideal for large, sparse systems.
-
-Parameters
-----------
-A : tuple
-    Either one-dimensional vector of input functions or matrix of characteristic values.
-x : tuple
-    Either one-dimensional vector of variables or initial guesses for SOE.
-b : tuple
-    Solution vector.
-power : float, optional
-    Signed, specified power of tolerance until satisfying method.
-max_iter : int, optional
-    Number of iterations.
-norm_type : {'l_infinity', 'l_two'}, optional
-    String representation of desired norm function. `'l_infinity'` by default.
-
-Attributes
-----------
-A : np.ndarray
-    Either one-dimensional vector of input functions or matrix of characteristic values.
-x : np.ndarray
-    Either one-dimensional vector of variables or initial guesses for SOE.
-b : np.ndarray
-    Solution vector.
-tol : float
-    Specified tolerance to which method terminates.
-max_iter : int
-    Maximum iterations allowed for method.
-norm_type : string
-    String representation of desired norm function.
-is_diagonal, is_symmetric, is_tridiagonal : bool
-    Truth value of whether matrix is diagonal, symmetric, and tridiagonal, respectively if not lambda expressions.
-eigen_values : np.ndarray
-    Eigenvalues of characteristic matrix, `A` if not lambda expressions.
-spectral_radius, condition_number : float
-    Spectral radius and condition number of characteristic matrix, `A`, respectively if not lambda expressions.
-
-Methods
--------
-find_omega(omega=0)
-    Suggests optimum \$\\omega\$ over input.
-gauss_seidel()
-    Improves on `jacobi()` for faster solution.
-jacobi()
-    Iteratively find solution until within tolerance.
-newton_raphson(variables: Tuple[str])
-    Given one-dimensional array of equations respect input variables to build gradient (Jacobian) matrix.
-successive_relaxation(omega=None)
-    Adjusts solution rate of `gauss_seidel()` by scalar \$\\omega\$ which is `None` by default to find the most optimum.
-
-Raises
-------
-TypeError
-    Not all elements in matrix of interest (if one-dimensional) are lambda expressions.
-IndexError
-    Matrix of interest must be square.
-IndexError
-    If `x` is not a one-dimensional array.
-IndexError
-    If `b` is not a one-dimensional array.
-ValueError
-    If iterations constraint is not an integer greater than zero.
-ValueError
-    If desired norm method was neither `'l_infinity'` nor `'l_two'`.
-
-See Also
---------
-diagonality : Determines if matrix, `A` is strictly, diagonally dominant.
-symmetry : Dtermines if matrix, `A` is symmetric.
-tridiagonality : Determines if matrix, `A` is tridiagonal.
-EigenValues.qr_algorithm : Function to find eigenvalues of matrix, A given initial vector, x and solution vector, b..
-spectral_radius : Function to find the spectral radius of characteristic matrix, A.
-condition_number : Finds the condition number of matrix, A.
-SystemOfEquations : Alternative techniques to solve smaller SOE.
-
-Notes
------
-Specified tolerance evaluated by: `10**power`.
-
-`norm_type` may be either `'l_infinity'` or `'l_two'`. Is 'l_infinity' by default.
+Given the system of equations, \$\\mathbf{A}\\vec{x} = \\vec{b}\$, attempt to solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ in so many iterations, `N` within tolerance, `tol`.
+*Ideal for large, sparse systems.*
 """
-
 struct MultiVariableIteration{T<:Real}
     A   ::Union{Matrix{T}, Vector{Function}}
     x   ::Vector{T}
@@ -232,6 +148,12 @@ function showjacobian(J::Matrix{Function}, x::Union{Tuple{Vararg{Num}}, Vector{F
     return jacMatrix
 end
 
+"""
+    solve(mvi::MultiVariableIteration[; method=:jacobi, omega=0., variables])
+
+Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ according to `method` ∈ {`:jacobi` (default), `:gauss_seidel`, `:successive_relaxation`, `:newton_raphson`}.
+Each `method` also has a convenience function.
+"""
 function solve(mvi::MultiVariableIteration;
         method      ::Symbol                            = :jacobi,
         omega       ::Float64                           = 0.,
@@ -283,7 +205,7 @@ end
 """
     gauss_seidel(mvi)
 
-Solve \$\\mathbf{A}\\vec{x} = \\vec{b}\$ via the Gauss-Seidel Method to find \$\\vec{x}\$.
+Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Gauss-Seidel Method**.
 
 # Notes
 This method improves on `jacobi()` by using the most recently calculated entries in the approximation vector, `x` at the end of each iteration.
@@ -299,7 +221,7 @@ gauss_seidel(mvi::MultiVariableIteration) = solve(mvi; method=:gauss_seidel)
 """
     jacobi(mvi)
 
-Solve \$\\mathbf{A}\\vec{x} = \\vec{b}\$ via the Jacobi Method to find \$\\vec{x}\$.
+Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Jacobi Method** to find \$\\vec{x}\$.
 
 # Notes
 The core algorithm by which method marches through iterations:
@@ -314,7 +236,7 @@ jacobi(mvi::MultiVariableIteration) = solve(mvi; method=:jacobi)
 """
     newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}})
 
-Solve non-linear systems of equations, \$\\vec{A}\\vec{x} = \\vec{b}\$ via the Newton-Raphson Method to find \$\\vec{x}\$.
+Solve non-linear systems of equations, \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Newton-Raphson Method**.
 
 Here, `mvi.A` should be a vector of functions wherein each variable is represented.
 
@@ -347,7 +269,7 @@ method=:newton_raphson, variables=variables)
 """
     successive_relaxation(mvi[, omega=0.])
 
-Solve \$\\mathbf{A}\\vec{x} = \\vec{b}\$ via the Successive Relaxation Method to find \$\\vec{x}\$.
+Solve \$\\vec{x} = \\mathbf{A}^{-1}\\vec{b}\$ via the **Successive Relaxation Method**.
 Method is Successive Over-Relaxation (SOR) if `omega` > 1, Successive Under-Relaxation (SUR) if `omega` < 1, and reduces to Gauss-Seidel if `omega` = 1.
 
 # Notes
