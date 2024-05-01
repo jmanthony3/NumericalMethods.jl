@@ -10,7 +10,7 @@ Documentation for [NumericalMethods](https://github.com/jmanthony3/NumericalMeth
 ```
 
 ## Functions
-```@autodocs
+```@autodocs; canonical=false
 Modules = [NumericalMethods]
 Private = false
 Pages   = [
