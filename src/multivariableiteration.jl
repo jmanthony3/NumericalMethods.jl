@@ -134,9 +134,9 @@ Find the condition number of matrix, `A`.
 
 # Notes
 Definition [burdenNumericalAnalysis2016]_:
-    The condition number of the non-singular matrix, \$\\mathbf{A}\$ relative to a norm, \$||\\cdot||\$ is
+The condition number of the non-singular matrix, \$\\mathbf{A}\$ relative to a norm, \$||\\cdot||\$ is
 
-    \$\$K(\\mathbf{A}) = ||\\mathbf{A}|| \\cdot ||\\mathbf{A}^{-1}||\$\$
+\$\$K(\\mathbf{A}) = ||\\mathbf{A}|| \\cdot ||\\mathbf{A}^{-1}||\$\$
 
 A matrix is well-conditioned if \$K(\\mathbf{A})\$ is close to 1 and is ill-conditioned if significantly greater than 1.
 """
@@ -233,22 +233,22 @@ function showjacobian(J::Matrix{Function}, x::Union{Tuple{Vararg{Num}}, Vector{F
 end
 
 function solve(mvi::MultiVariableIteration;
-        method      ::Symbol=:jacobi,
-        omega       ::Union{Nothing, Float64}           = nothing,
+        method      ::Symbol                            = :jacobi,
+        omega       ::Float64                           = 0.,
         variables   ::Union{Nothing, Tuple{Vararg{Num}}}= nothing)
     x = mvi.x
     if method == :newton_raphson
         jacobian = jacobian_form(mvi.A, variables)
         J(x) = convert.(Float64, Symbolics.value.(showjacobian(jacobian, x)))
     elseif method == :successive_relaxation
-        if isnothing(omega)
-            w = find_omega(mvi)
+        if omega == 0.
+            ω = find_omega(mvi)
         # elseif isinstance(omega, (int, float)) && omega > 0.
         #     w = self.find_omega(omega=omega)
         #     logging.info(f"omega = {omega} given. Which is not optimum: {w}")
         #     w = omega
         else
-            w = omega
+            ω = omega
         end
     end
     k, n, approximations, errors = 1, length(x), [x], [mvi.tol*10]
@@ -271,7 +271,7 @@ function solve(mvi::MultiVariableIteration;
             end
         end
         if method == :successive_relaxation
-            xk = [(1. - w) * x[i] + w * xk[i] for i ∈ 1:1:n]
+            xk = [(1. - ω) * x[i] + ω * xk[i] for i ∈ 1:1:n]
         end
         push!(approximations,   xk)
         push!(errors,           norm(xk - x))
@@ -280,65 +280,34 @@ function solve(mvi::MultiVariableIteration;
     return x
 end
 
-"""Given \$\\mathbf{A}\\vec{x} = \\vec{b}\$, use `norm_type` to find \$\\vec{x}\$ via the Gauss-Seidel Method.
+"""
+    gauss_seidel(mvi)
 
-Returns
--------
-pandas.DataFrame : DataFrame
-    Summarized dataframe from iterations.
+Solve \$\\mathbf{A}\\vec{x} = \\vec{b}\$ via the Gauss-Seidel Method to find \$\\vec{x}\$.
 
-Attributes
-----------
-iterations, approximations, errors : np.ndarray
-    Collection of iterations, approximations, and normative errors through method.
+# Notes
+This method improves on `jacobi()` by using the most recently calculated entries in the approximation vector, `x` at the end of each iteration.
+The core algorithm by which method marches through iterations:
 
-Warnings
---------
-Writes to logfile whether or not a solution was found within the specified tolerance with the supplied, initial guess.
-
-See Also
---------
-Norm.l_infinity : Will find \$||x_{i} - x_{0}||_{\\infty}\$
-Norm.l_two : Will find \$||x_{i} - x_{0}||_{2}\$
-
-Notes
------
-This improves on `jacobi` by using the most recently calculated entries in the approximation vector, `x` after each iteration.
-
-The primary algorithm by which method marches approximation vector, `x`
-
-.. math::
-    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} * \\mathbf{U} \\bigr) \\cdot \\vec{x}^{(k - 1)} + \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} \\bigr) \\cdot \\vec{b}
+\$\$
+    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} * \\mathbf{U} \\bigr) \\cdot
+        \\vec{x}^{(k - 1)} + \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} \\bigr) \\cdot \\vec{b}
+\$\$
 """
 gauss_seidel(mvi::MultiVariableIteration) = solve(mvi; method=:gauss_seidel)
 
-"""Given \$\\mathbf{A}\\vec{x} = \\vec{b}\$, use `norm_type` to find \$\\vec{x}\$ via the Jacobi Method.
+"""
+    jacobi(mvi)
 
-Returns
--------
-pandas.DataFrame : DataFrame
-    Summarized dataframe from iterations.
+Solve \$\\mathbf{A}\\vec{x} = \\vec{b}\$ via the Jacobi Method to find \$\\vec{x}\$.
 
-Attributes
-----------
-iterations, approximations, errors : np.ndarray
-    Collection of iterations, approximations, and normative errors through method.
+# Notes
+The core algorithm by which method marches through iterations:
 
-Warnings
---------
-Writes to logfile whether or not a solution was found within the specified tolerance with the supplied, initial guess.
-
-See Also
---------
-Norm.l_infinity : Will find \$||x_{i} - x_{0}||_{\\infty}\$
-Norm.l_two : Will find \$||x_{i} - x_{0}||_{2}\$
-
-Notes
------
-The primary algorithm by which method marches approximation vector, `x`
-
-.. math::
-    \\vec{x}^{(k)} = \\bigl( \\mathbf{D}^{-1} * (\\mathbf{L} + \\mathbf{U}) \\bigr) \\cdot \\vec{x}^{(k - 1)} + ( \\mathbf{D}^{-1} ) \\cdot \\vec{b}
+\$\$
+    \\vec{x}^{(k)} = \\bigl( \\mathbf{D}^{-1} * (\\mathbf{L} + \\mathbf{U}) \\bigr) \\cdot
+        \\vec{x}^{(k - 1)} + ( \\mathbf{D}^{-1} ) \\cdot \\vec{b}
+\$\$
 """
 jacobi(mvi::MultiVariableIteration) = solve(mvi; method=:jacobi)
 
@@ -379,48 +348,21 @@ Examples
 newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}}) = solve(mvi;
 method=:newton_raphson, variables=variables)
 
-"""Given \$\\mathbf{A}\vec{x} = \\vec{b}\$, use `norm_type` to find \$\\vec{x}\$ via the Successive Relaxation Method. Is Successive Over-Relaxation (SOR) if `omega` > 1, Successive Under-Relaxation (SUR) if `omega` < 1, and is Gauss-Seidel if `omega` = 1.
-
-Parameters
-----------
-omega : None or float, optional
-    Relaxation parameter.
-
-Attributes
-----------
-iterations, approximations, errors : np.ndarray
-    Collection of iterations, approximations, and normative errors through method.
-
-Returns
--------
-pandas.DataFrame : DataFrame
-    Summarized dataframe from iterations.
-
-Warnings
---------
-Writes to logfile optimal choice of omega, regardless of assignment, and whether or not a solution was found within the specified tolerance with the supplied, initial guess.
-
-See Also
---------
-find_omega : Will analyze SOE to find an optimal \$\\omega\$, if possible.
-gauss_seidel : Gauss-Seidel Method modified by omega.
-Norm.l_infinity : Will find \$||x_{i} - x_{0}||_{\\infty}\$
-Norm.l_two : Will find \$||x_{i} - x_{0}||_{2}\$
-
-Notes
------
-SOR and SUR modify, respectively, on `gauss_seidel` by decreasing or increasing, respectively, the spectral radius of `A` to accelerate or deccelerate convergence, respectively.
-
-The primary algorithm by which method marches approximation vector, `x`
-
-.. math::
-    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\omega\\mathbf{L})^{-1} * ((1 - \\omega)*\\mathbf{D} + \\omega\\mathbf{U}) \\bigr) \\cdot \\vec{x}^{(k - 1)} + \\omega( (\\mathbf{D} - \\omega\\mathbf{L})^{-1} ) \\cdot \\vec{b}
-
-which is similar to `gauss_seidel`
-
-.. math::
-    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} * \\mathbf{U} \\bigr) \\cdot \\vec{x}^{(k - 1)} + \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} \\bigr) \\cdot \\vec{b}
-
-`omega` will be analyzed independent of assigned value which will be used if not specified in assignment and if possible.
 """
-successive_relaxation(mvi::MultiVariableIteration, omega::Union{Nothing, Float64}=nothing) = solve(mvi; method=:successive_relaxation, omega=omega)
+    successive_relaxation(mvi[, omega=0.])
+
+Solve \$\\mathbf{A}\\vec{x} = \\vec{b}\$ via the Successive Relaxation Method to find \$\\vec{x}\$.
+Method is Successive Over-Relaxation (SOR) if `omega` > 1, Successive Under-Relaxation (SUR) if `omega` < 1, and reduces to Gauss-Seidel if `omega` = 1.
+
+# Notes
+SOR and SUR accelerate or deccelerate convergence of `gauss_seidel()`, respectively, by decreasing or increasing the spectral radius of `mvi.A`.
+The core algorithm by which method marches through iterations:
+
+\$\$
+    \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - \\omega\\mathbf{L})^{-1} * ((1 - \\omega)*\\mathbf{D} + \\omega\\mathbf{U}) \\bigr) \\cdot
+        \\vec{x}^{(k - 1)} + \\omega( (\\mathbf{D} - \\omega\\mathbf{L})^{-1} ) \\cdot \\vec{b}
+\$\$
+
+If left unspecified, and if possible, an optimum relaxation parameter, \$\\omega\$ will be calculated by `find_omega()`.
+"""
+successive_relaxation(mvi::MultiVariableIteration, omega::Float64=0.) = solve(mvi; method=:successive_relaxation, omega=omega)
