@@ -1,16 +1,19 @@
-# Numerical Differentiation
+## Numerical Differentiation
 
-<!-- ```@meta
+```@meta
 CurrentModule = NumericalMethods
-``` -->
+```
 
 ## Functions
 ```@autodocs
 Modules = [NumericalMethods]
-Order   = [:type, :function]
+Order   = [:function]
 Pages   = ["numericaldifferentiation.jl"]
 ```
 
 ## Index
 ```@index
+Modules = [NumericalMethods]
+Order   = [:type, :function]
+Pages   = ["numericaldifferentiation.md"]
 ```

@@ -1,16 +1,26 @@
-# Single-Variable Iteration
+## Single-Variable Iteration
 
-<!-- ```@meta
+```@meta
 CurrentModule = NumericalMethods
-``` -->
+```
+
+## Types
+```@autodocs
+Modules = [NumericalMethods]
+Order   = [:type]
+Pages   = ["singlevariableiteration.jl"]
+```
 
 ## Functions
 ```@autodocs
 Modules = [NumericalMethods]
-Order   = [:type, :function]
+Order   = [:function]
 Pages   = ["singlevariableiteration.jl"]
 ```
 
 ## Index
 ```@index
+Modules = [NumericalMethods]
+Order   = [:type, :function]
+Pages   = ["singlevariableiteration.md"]
 ```

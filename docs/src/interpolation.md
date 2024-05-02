@@ -1,4 +1,4 @@
-## Initial-Value Problem
+## Functions
 
 ```@meta
 CurrentModule = NumericalMethods
@@ -8,19 +8,19 @@ CurrentModule = NumericalMethods
 ```@autodocs
 Modules = [NumericalMethods]
 Order   = [:type]
-Pages   = ["initialvalueproblem.jl"]
+Pages   = ["interpolation.jl"]
 ```
 
 ## Functions
 ```@autodocs
 Modules = [NumericalMethods]
 Order   = [:function]
-Pages   = ["initialvalueproblem.jl"]
+Pages   = ["interpolation.jl"]
 ```
 
 ## Index
 ```@index
 Modules = [NumericalMethods]
 Order   = [:type, :function]
-Pages   = ["initialvalueproblem.md"]
+Pages   = ["interpolation.md"]
 ```

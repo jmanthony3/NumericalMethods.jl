@@ -1,7 +1,8 @@
+using Pkg; Pkg.precompile()
 using Documenter
 using NumericalMethods
 
-DocMeta.setdocmeta!(NumericalMethods, :DocTestSetup, :(using NumericalMethods); recursive=false)
+DocMeta.setdocmeta!(NumericalMethods, :DocTestSetup, :(using NumericalMethods); recursive=true)
 
 makedocs(;
     modules=[NumericalMethods],
@@ -18,9 +19,10 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Single-Variable Iteration" => "singlevariableiteration.md",
-        "Initial-Value Problem" => "initialvalueproblem.md",
+        "Interpolation" => "interpolation.md",
         "Numerical Differentiation" => "numericaldifferentiation.md",
         "Numerical Integration" => "numericalintegration.md",
+        "Initial-Value Problem" => "initialvalueproblem.md",
         "Multi-Variable Iteration" => "multivariableiteration.md"
     ],
 )

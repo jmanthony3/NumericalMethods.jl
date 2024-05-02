@@ -15,14 +15,8 @@ export newtondifference
 export natural
 export clamped
 export bezier
-
-export InitialValueProblem
-export forward_euler
-export backward_euler
-export improved_euler
-export modified_euler
-export runge_kutta
-include("initialvalueproblem.jl")
+export linearleastsquares
+include("interpolation.jl")
 
 export n1derivative
 export endpoint
@@ -31,6 +25,14 @@ include("numericaldifferentiation.jl")
 
 export integrate
 include("numericalintegration.jl")
+
+export InitialValueProblem
+export forward_euler
+export backward_euler
+export improved_euler
+export modified_euler
+export runge_kutta
+include("initialvalueproblem.jl")
 
 export MultiVariableIteration
 export diagonality
@@ -46,10 +48,5 @@ export jacobi
 export newton_raphson
 export successive_relaxation
 include("multivariableiteration.jl")
-
-export linearleastsquares
-
-
-include("functions.jl")
 
 end
