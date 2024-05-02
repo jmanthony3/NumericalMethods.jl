@@ -156,7 +156,7 @@ end
 Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` according to `method` ∈ {`:jacobi` (default), `:gauss_seidel`, `:successive_relaxation`, `:newton_raphson`}.
 
 Each `method` has an equivalent convenience function.
-E.g. `solve(mvi; method=:jacobi)` ≡ `jacobi(ivp)`.
+E.g. `solve(mvi; method=:jacobi)` ≡ `jacobi(mvi)`.
 """
 function solve(mvi::MultiVariableIteration;
         method      ::Symbol                            = :jacobi,
