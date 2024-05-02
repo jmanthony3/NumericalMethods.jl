@@ -1,4 +1,4 @@
-## Single-Variable Iteration
+# Single-Variable Iteration
 
 ```@meta
 CurrentModule = NumericalMethods

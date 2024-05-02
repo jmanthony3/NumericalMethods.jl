@@ -1,4 +1,4 @@
-## Numerical Differentiation
+# Numerical Differentiation
 
 ```@meta
 CurrentModule = NumericalMethods

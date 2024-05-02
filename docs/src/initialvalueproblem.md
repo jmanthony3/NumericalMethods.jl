@@ -1,4 +1,4 @@
-## Initial-Value Problem
+# Initial-Value Problem
 
 ```@meta
 CurrentModule = NumericalMethods

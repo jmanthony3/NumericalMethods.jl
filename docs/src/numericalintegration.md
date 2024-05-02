@@ -1,4 +1,4 @@
-## Numerical Integration
+# Numerical Integration
 
 ```@meta
 CurrentModule = NumericalMethods

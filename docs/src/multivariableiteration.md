@@ -1,4 +1,4 @@
-## Multi-Variable Iteration
+# Multi-Variable Iteration
 
 ```@meta
 CurrentModule = NumericalMethods

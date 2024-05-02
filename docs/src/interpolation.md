@@ -1,4 +1,4 @@
-## Functions
+# Interpolation
 
 ```@meta
 CurrentModule = NumericalMethods
