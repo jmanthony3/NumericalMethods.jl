@@ -165,9 +165,8 @@ function solve(mvi::MultiVariableIteration;
         jacobian    ::Union{Nothing, Function}          = nothing)
     x = mvi.x
     if method == :newton_raphson
-        J(x) = if !isnothing(jacobian)
-            jacobian = jacobian_form(mvi.A, variables)
-            convert.(Float64, Symbolics.value.(showjacobian(jacobian, x)))
+        J(x) = if isnothing(jacobian)
+            convert.(Float64, Symbolics.value.(showjacobian(jacobian_form(mvi.A, variables), x)))
         else
             jacobian(x)
         end
