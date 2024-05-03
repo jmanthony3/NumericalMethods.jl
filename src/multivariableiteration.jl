@@ -240,14 +240,15 @@ The core algorithm by which method marches through iterations:
 jacobi(mvi::MultiVariableIteration) = solve(mvi; method=:jacobi)
 
 """
-    newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}})
+    newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}}[; jacobian=nothing])
 
 Solve non-linear systems of equations, ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Newton-Raphson Method**.
 
 Here, `mvi.A` should be a vector of functions wherein each variable is represented.
+**Method will go faster if `jacobian` is pre-defined.**
+_Otherwise, the Jacobian matrix of `mvi.A` will be internally constructed._
 
 # Examples
-
 ```jldoctest; output=false
 f1(x1, x2, x3)  = 3x1 - cos(x2*x3) - 0.5
 f2(x1, x2, x3)  = x1^2 - 81(x2 + 0.1)^2 + sin(x3) + 1.06
