@@ -151,7 +151,7 @@ function showjacobian(J::Matrix{Function}, x::Union{Tuple{Vararg{Num}}, Vector{F
 end
 
 """
-    solve(mvi::MultiVariableIteration[; method=:jacobi, omega=0., variables])
+    solve(mvi::MultiVariableIteration[; method=:jacobi, omega=0., variables, jacobian])
 
 Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` according to `method` ∈ {`:jacobi` (default), `:gauss_seidel`, `:successive_relaxation`, `:newton_raphson`}.
 
@@ -161,11 +161,16 @@ E.g. `solve(mvi; method=:jacobi)` ≡ `jacobi(mvi)`.
 function solve(mvi::MultiVariableIteration;
         method      ::Symbol                            = :jacobi,
         omega       ::Float64                           = 0.,
-        variables   ::Union{Nothing, Tuple{Vararg{Num}}}= nothing)
+        variables   ::Union{Nothing, Tuple{Vararg{Num}}}= nothing,
+        jacobian    ::Union{Nothing, Function}          = nothing)
     x = mvi.x
     if method == :newton_raphson
-        jacobian = jacobian_form(mvi.A, variables)
-        J(x) = convert.(Float64, Symbolics.value.(showjacobian(jacobian, x)))
+        J(x) = if !isnothing(jacobian)
+            jacobian = jacobian_form(mvi.A, variables)
+            convert.(Float64, Symbolics.value.(showjacobian(jacobian, x)))
+        else
+            jacobian(x)
+        end
     elseif method == :successive_relaxation
         if omega == 0.
             ω = find_omega(mvi)
@@ -265,8 +270,9 @@ newton_raphson(mvi, (x1, x2, x3))
  -0.5235987755982989
 ```
 """
-newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}}) = solve(mvi;
-method=:newton_raphson, variables=variables)
+newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}};
+    jacobian::Union{Nothing, Function}=nothing) = solve(mvi;
+method=:newton_raphson, variables=variables, jacobian=jacobian)
 
 """
     successive_relaxation(mvi[, omega=0.])
