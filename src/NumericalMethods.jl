@@ -10,6 +10,7 @@ export secant_method
 export false_position
 include("singlevariableiteration.jl")
 
+export linearinterpolation
 export lagrange
 export newtondifference
 export natural

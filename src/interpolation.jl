@@ -4,6 +4,32 @@ using StaticArrays
 using Statistics
 using Symbolics
 
+"""
+    linearinterpolation(x0, y0, x1, y1, x)
+
+``y = y₀ + (x - x₀)*(y₁ - y₀)/(x₁ - x₀)``
+"""
+@inline function linearinterpolation(x0::T, y0::T, x1::T, y1::T, x::T)::Float64 where {T<:Float64}
+    return y0 + (x - x0)*(y1 - y0)/(x1 - x0)
+end
+
+"""
+    linearinterpolation(x, y, p)
+
+Calls `linearinterpolation` with the first index in `x` less than and greater than `p`.
+If for any `p` ∈ `x`, then the first occurrence in `y` is returned.
+"""
+function linearinterpolation(x::Vector{T}, y::Vector{T}, p::T)::Float64 where {T<:Float64}
+    return if isempty(findall(x->x==p, x))
+        i, j    = findlast(x .< p), findfirst(x .> p)
+        x0, y0  = x[i], y[i]
+        x1, y1  = x[j], y[j]
+        linearinterpolation(x0, y0, x1, y1, p)
+    else
+        y[findfirst(x .== p)]
+    end
+end
+
 # Ch. 3 (p. 103)
 ## 3.1 (p. 104)
 function lagrange_coefficient(x::Vector{T}, xₖ::T, t::Num) where {T<:Float64}
