@@ -1,3 +1,13 @@
+module Interpolations
+
+export linearinterpolation
+export lagrange
+export newtondifference
+export natural
+export clamped
+export bezier
+export linearleastsquares
+
 using IntervalArithmetic, IntervalRootFinding
 using Polynomials: Polynomial, roots
 using StaticArrays
@@ -365,4 +375,6 @@ function linearleastsquares(x::T, f::T, type::Symbol)::Tuple{Function, AbstractF
         error   = sum((Y - p.(X)) .^ 2)
         return p, error
     end
+end
+
 end

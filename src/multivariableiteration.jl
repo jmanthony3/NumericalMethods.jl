@@ -1,3 +1,20 @@
+module MultiVariableIterations
+
+export MultiVariableIteration
+export diagonality
+export spectral_radius
+export condition_number
+export symmetry
+export positive_definite
+export tridiagonality
+export find_omega
+export jacobian_form
+export solve
+export gauss_seidel
+export jacobi
+export newton_raphson
+export successive_relaxation
+
 using DataFrames
 using LinearAlgebra
 using Symbolics
@@ -291,3 +308,5 @@ The core algorithm by which method marches through iterations:
 If left unspecified, and if possible, an optimum relaxation parameter, ω will be calculated by `find_omega()`.
 """
 successive_relaxation(mvi::MultiVariableIteration, omega::Float64=0.) = solve(mvi; method=:successive_relaxation, omega=omega)
+
+end

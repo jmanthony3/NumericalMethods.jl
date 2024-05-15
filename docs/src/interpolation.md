@@ -1,19 +1,19 @@
 # Interpolation
 
 ```@meta
-CurrentModule = NumericalMethods
+CurrentModule = NumericalMethods.Interpolations
 ```
 
 ## Functions
 ```@autodocs
-Modules = [NumericalMethods]
+Modules = [Interpolations]
 Order   = [:function]
 Pages   = ["interpolation.jl"]
 ```
 
 ## Index
 ```@index
-Modules = [NumericalMethods]
+Modules = [Interpolations]
 Order   = [:type, :function]
 Pages   = ["interpolation.md"]
 ```

@@ -4,8 +4,8 @@ Documentation for [NumericalMethods](https://github.com/jmanthony3/NumericalMeth
 ```@contents
 Modules = [NumericalMethods]
 Pages   = [
-    "interpolation.md",
     "singlevariableiteration.md",
+    "interpolation.md",
     "numericaldifferentiation.md",
     "numericalintegration.md",
     "initialvalueproblem.md",
@@ -18,8 +18,8 @@ Depth   = 1
 ```@index
 Modules = [NumericalMethods]
 Pages   = [
-    "interpolation.md",
     "singlevariableiteration.md",
+    "interpolation.md",
     "numericaldifferentiation.md",
     "numericalintegration.md",
     "initialvalueproblem.md",

@@ -1,4 +1,11 @@
+module Derivatives
+
+export n1derivative
+export endpoint
+export midpoint
+
 using Symbolics
+import ..Interpolations: lagrange_coefficient
 
 # Ch. 4 (p. 171)
 ## 4.1 (p. 172)
@@ -93,4 +100,6 @@ end
 @inline function midpoint(x::AbstractVector{T}, f::AbstractVector{T}, h::T, point::Int64;
         method::Symbol=:three) where {T<:Float64}
     return midpoint(float(collect(x)), float(collect(f)), h, point; method=method)
+end
+
 end

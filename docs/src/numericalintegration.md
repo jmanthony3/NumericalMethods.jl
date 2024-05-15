@@ -1,19 +1,19 @@
 # Numerical Integration
 
 ```@meta
-CurrentModule = NumericalMethods
+CurrentModule = NumericalMethods.Integrations
 ```
 
 ## Functions
 ```@autodocs
-Modules = [NumericalMethods]
+Modules = [Integrations]
 Order   = [:function]
 Pages   = ["numericalintegration.jl"]
 ```
 
 ## Index
 ```@index
-Modules = [NumericalMethods]
+Modules = [Integrations]
 Order   = [:type, :function]
 Pages   = ["numericalintegration.md"]
 ```

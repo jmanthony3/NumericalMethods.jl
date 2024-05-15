@@ -1,19 +1,19 @@
 # Numerical Differentiation
 
 ```@meta
-CurrentModule = NumericalMethods
+CurrentModule = NumericalMethods.Derivatives
 ```
 
 ## Functions
 ```@autodocs
-Modules = [NumericalMethods]
+Modules = [Derivatives]
 Order   = [:function]
 Pages   = ["numericaldifferentiation.jl"]
 ```
 
 ## Index
 ```@index
-Modules = [NumericalMethods]
+Modules = [Derivatives]
 Order   = [:type, :function]
 Pages   = ["numericaldifferentiation.md"]
 ```

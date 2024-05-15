@@ -1,26 +1,26 @@
 # Initial-Value Problem
 
 ```@meta
-CurrentModule = NumericalMethods
+CurrentModule = NumericalMethods.InitialValueProblems
 ```
 
 ## Types
 ```@autodocs
-Modules = [NumericalMethods]
+Modules = [InitialValueProblems]
 Order   = [:type]
 Pages   = ["initialvalueproblem.jl"]
 ```
 
 ## Functions
 ```@autodocs
-Modules = [NumericalMethods]
+Modules = [InitialValueProblems]
 Order   = [:function]
 Pages   = ["initialvalueproblem.jl"]
 ```
 
 ## Index
 ```@index
-Modules = [NumericalMethods]
+Modules = [InitialValueProblems]
 Order   = [:type, :function]
 Pages   = ["initialvalueproblem.md"]
 ```

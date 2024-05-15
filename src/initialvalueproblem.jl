@@ -1,3 +1,13 @@
+module InitialValueProblems
+
+export InitialValueProblem
+export solve
+export forward_euler
+export backward_euler
+export improved_euler
+export modified_euler
+export runge_kutta
+
 using StaticArrays
 
 # Ch. 5 (p. 259)
@@ -58,3 +68,5 @@ backward_euler(ivp::InitialValueProblem;    tol=10^-3) = solve(ivp; tol=tol, met
 improved_euler(ivp::InitialValueProblem;    tol=10^-3) = solve(ivp; tol=tol, method=:improved_euler)
 modified_euler(ivp::InitialValueProblem;    tol=10^-3) = solve(ivp; tol=tol, method=:modified_euler)
 runge_kutta(ivp::InitialValueProblem;       tol=10^-3) = solve(ivp; tol=tol, method=:runge_kutta)
+
+end

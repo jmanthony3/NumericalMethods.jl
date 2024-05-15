@@ -1,3 +1,7 @@
+module Integrations
+
+export integrate
+
 ## 4.3 (p. 191)
 """
     integrate(f, x      [; rule=:trapezoidal, tol=10^-3])
@@ -123,4 +127,6 @@ end
     else
         integrate(f, float.(a:(b - a)/n:b), rule=rule, tol=tol)
     end
+end
+
 end

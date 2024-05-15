@@ -1,3 +1,13 @@
+module SingleVariableIterations
+
+export SingleVariableIteration
+export solve
+export bisection
+export fixed_point
+export newton_raphson
+export secant_method
+export false_position
+
 using Symbolics
 
 # Ch. 2 (p. 47)
@@ -230,3 +240,5 @@ See `fixed_point()` for theorem.
 """
 false_position(svi::SingleVariableIteration, p0::Float64, p1::Float64
 ) = solve(svi; method=:false_position, p0=p0, p1=p1)
+
+end
