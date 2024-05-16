@@ -1,7 +1,7 @@
 module InitialValueProblems
 
 export InitialValueProblem
-export solve
+# export solve
 export forward_euler
 export backward_euler
 export improved_euler

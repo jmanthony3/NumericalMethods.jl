@@ -15,6 +15,8 @@ export jacobi
 export newton_raphson
 export successive_relaxation
 
+import ..NumericalMethods: newton_raphson
+
 using DataFrames
 using LinearAlgebra
 using Symbolics
