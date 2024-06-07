@@ -107,7 +107,7 @@ function solve(svi::SingleVariableIteration;
                 end
                 k += 1                                  # iterate to k + 1
             end
-            return k <= N ? g[k] : NaN
+            return (k <= N && isassigned(g, k)) ? g[k] : NaN
         # else # abort if f(a) is not opposite f(b)
         #     if method == :bisection
         #         error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(a = %1.4f) = %1.4f, f(b = %1.4f) = %1.4f]",
@@ -148,7 +148,7 @@ function solve(svi::SingleVariableIteration;
             end
             p0 = p; k += 1                      # iterate to k + 1
         end
-        return k <= N ? g[k] : NaN
+        return (k <= N && isassigned(g, k)) ? g[k] : NaN
     end
 end
 

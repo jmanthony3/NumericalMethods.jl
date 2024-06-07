@@ -46,6 +46,9 @@ Acceptable values for `method` include {`:three`, `:five`}.
 function endpoint(x::Vector{T}, f::Vector{T}, h::T, point::Symbol;
         method::Symbol=:three)::Float64 where {T<:Float64}
     i = (point == :begin ? 1 : (point == :end ? length(x) : nothing))
+    if isnothing(i)
+        throw(ArgumentError("`point` must be either `:begin` or `:end`."))
+    end
     @inbounds return if point == :begin
         if method == :three
             (-3f[i] + 4f[i+1] - f[i+2]) / 2h

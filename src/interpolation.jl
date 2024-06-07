@@ -293,7 +293,7 @@ An application of Hermitic polynomials to draw Bezier curves between points.
 # Notes
 Each argument should be a one-to-one mapping of points, (xᵢ, yᵢ) and (xᵢ₊₁, yᵢ₊₁) and their respective guide points, (xᵢ⁺, yᵢ⁺) and (xᵢ₊₁⁻, yᵢ₊₁⁻).
 """
-function bezier(x::T, y::T, xguides::T, yguides::T)::Vector{Function} where {T<:AbstractVector}
+function bezier(x::T, y::T, xguides::T, yguides::T)::Vector{Function} where {T<:Vector{Float64}}
     n, curves = length(x) - 1, []
     for i ∈ 1:1:n
         @inbounds a = (x[i],
@@ -323,7 +323,7 @@ Least squares error := ``E = \\sum_{i=1}^{m}[y_{i} - P_{n}(x_{i})]^{2}``
 
 Constructed polynomial of the form: ``P(x) = a_{n}x^{n} + a_{n - 1}x^{n - 1} + \\dots + a_{1}x + a_{0}``
 """
-function linearleastsquares(x::T, f::T, n::Int64)::Tuple{Function, AbstractFloat} where {T<:AbstractVector}
+function linearleastsquares(x::T, f::T, n::Int64)::Tuple{Function, Float64} where {T<:Vector{Float64}}
     X, Y    = x, f
     m       = length(X)
     A       = MMatrix{n+1, n+1}(zeros((n+1, n+1)))
@@ -353,7 +353,7 @@ end
 
 Given a domain and range, yield the coefficients for an equation and the equation of the form ``y = ax^{b}``.
 """
-function linearleastsquares(x::T, f::T, type::Symbol)::Tuple{Function, AbstractFloat} where {T<:AbstractVector}
+function linearleastsquares(x::T, f::T, type::Symbol)::Tuple{Function, Float64} where {T<:Vector{Float64}}
     if type == :power
         X, Y    = x, f
         m       = length(X)
@@ -373,7 +373,7 @@ function linearleastsquares(x::T, f::T, type::Symbol)::Tuple{Function, AbstractF
         a       = exp((sum(q3) - b*sum(q2)) / m)
         p(x)    = a*(x^b)
         error   = sum((Y - p.(X)) .^ 2)
-        return p, error
+        return p, (isnothing(error) ? 0. : error)
     end
 end
 
