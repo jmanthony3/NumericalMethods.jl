@@ -37,7 +37,7 @@ Each `method` has an equivalent convenience function.
 E.g. `solve(ivp; method=:runge_kutta)` ≡ `runge_kutta(ivp)`.
 """
 function solve(ivp::InitialValueProblem;
-        method::Symbol=:forward_euler, tol::Real=10^-3)::AbstractVector
+        method::Symbol=:forward_euler, tol::Real=10^-3)::Vector{Float64}
     f       = ivp.f
     t, h, w = ivp.a, ivp.h, ivp.α
     ea, eb, λ = 1/2, 1/2, 1

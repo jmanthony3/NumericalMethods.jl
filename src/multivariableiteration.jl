@@ -181,7 +181,7 @@ function solve(mvi::MultiVariableIteration;
         method      ::Symbol                            = :jacobi,
         omega       ::Float64                           = 0.,
         variables   ::Union{Nothing, Tuple{Vararg{Num}}}= nothing,
-        jacobian    ::Union{Nothing, Function}          = nothing)
+        jacobian    ::Union{Nothing, Function}          = nothing)::Vector{Float64}
     x = mvi.x
     if method == :newton_raphson
         J(x) = if isnothing(jacobian)

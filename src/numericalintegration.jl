@@ -111,6 +111,8 @@ function integrate(f::Union{AbstractVector{T}, Function}, x::AbstractVector{T};
             @inbounds z += (is_function ? f(x[2j]) : f[2j])
         end
         F          += 2h*z
+    else
+        throw(ArgumentError("`rule` must be one of {`:trapezoidal`, `:simpson13`, `:simpson38`, `:simpsonN`, `:midpoint`}."))
     end
     return F
 end
