@@ -22,7 +22,7 @@ https://en.wikipedia.org/wiki/Simpson%27s_rule
 function integrate(f::Union{AbstractVector{T}, Function}, x::AbstractVector{T};
         rule::Symbol= :trapezoidal, tol::T= 10^-3)::Float64 where {T<:Real}
     is_function = isa(f, Function)
-    @inbounds a, b, n     = x[begin], x[end], length(x) - 1
+    @inbounds a, b, n     = first(x), last(x), length(x) - 1
     if is_function
         n_min = if rule == :trapezoidal
             ceil(sqrt((b - a)^3 / (12 * tol)))
@@ -35,12 +35,12 @@ function integrate(f::Union{AbstractVector{T}, Function}, x::AbstractVector{T};
     if rule ∈ [:simpson13, :midpoint] && isodd(n)
         @inbounds F           = integrate(is_function ? f : f[n:end], x[n:end], rule=:trapezoidal)
         @inbounds x           = x[begin:n]
-        @inbounds a, b, n     = x[begin], x[end], length(x) - 1
+        @inbounds a, b, n     = first(x), last(x), length(x) - 1
     elseif rule == :simpson38 && n % 3 != 0
         m           = n - (n % 3 - 1)
         @inbounds F           = integrate(is_function ? f : f[m:end], x[m:end], rule=:trapezoidal)
         @inbounds x           = x[begin:m]
-        @inbounds a, b, n     = x[begin], x[end], length(x) - 1
+        @inbounds a, b, n     = first(x), last(x), length(x) - 1
     elseif rule == :simpsonN && isodd(n)
         @inbounds hn2, hn1    = x[n] - x[n - 1], x[n + 1] - x[n]
         @inbounds fn2, fn1, fn = is_function ? f.(x[n - 1:n + 1]) : f[n - 1:n + 1]
@@ -60,7 +60,7 @@ function integrate(f::Union{AbstractVector{T}, Function}, x::AbstractVector{T};
         F          += if is_function
             h/2*(f(a) + 2z + f(b))
         else
-            @inbounds h/2*(f[begin] + 2z + f[end])
+            @inbounds h/2*(first(f) + 2z + last(f))
         end
     elseif rule == :simpson13
         h           = (b - a) / n
@@ -75,7 +75,7 @@ function integrate(f::Union{AbstractVector{T}, Function}, x::AbstractVector{T};
         F          += if is_function
             h/3*(f(a) + 2z1 + 4z2 + f(b))
         else
-            @inbounds h/3*(f[begin] + 2z1 + 4z2 + f[end])
+            @inbounds h/3*(first(f) + 2z1 + 4z2 + last(f))
         end
     elseif rule == :simpson38
         h           = (b - a) / n
@@ -92,7 +92,7 @@ function integrate(f::Union{AbstractVector{T}, Function}, x::AbstractVector{T};
         F          += if is_function
             3h/8*(f(a) + 3z1 + 2z3 + f(b))
         else
-            @inbounds 3h/8*(f[begin] + 3z1 + 2z3 + f[end])
+            @inbounds 3h/8*(first(f) + 3z1 + 2z3 + last(f))
         end
     elseif rule == :simpsonN
         h           = (b - a) / n

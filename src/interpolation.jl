@@ -88,9 +88,9 @@ function lagrange(x::T, f::T;
             end
             g_prime_poly    = Polynomial(float.(coeffs_sorted))
             gx              = if i == 1
-                g_eval(coeffs_sorted[begin])
+                g_eval(first(coeffs_sorted))
             elseif i == 2
-                g_eval(roots(g_prime_poly)[begin])
+                g_eval(first(roots(g_prime_poly)))
             else
                 R = Float64[]
                 for r ∈ roots(g_prime_poly)
@@ -163,7 +163,7 @@ function newtondifference(x::Vector{T}, f::Vector{T}, α::Float64;
         g      += c * terms
         k      += (dir == :forward ? 1 : -1)
     end
-    p = g + (dir == :forward ? f[begin] : f[end])
+    p = g + (dir == :forward ? first(f) : last(f))
     return build_function(p, t, expression=Val{false})
 end
 
@@ -240,7 +240,7 @@ function clamped(x::Vector{T}, f::Vector{T}, fp::Vector{T}
         end
         # STEP 2:   define alpha list endpoints
         A, AP, ALPHA    = Y, YP, Vector{Float64}(undef, m)
-        @inbounds ALPHA[1]        = 3(A[2] - A[1])/H[1] - 3AP[1]
+        @inbounds ALPHA[1]        = 3(A[2] - first(A))/first(H) - first(3AP)
         @inbounds ALPHA[m]        = 3AP[m] - 3(A[m] - A[n])/H[n]
         # STEP 3:   build list, alpha_i
         for i ∈ 2:1:n
@@ -250,8 +250,8 @@ function clamped(x::Vector{T}, f::Vector{T}, fp::Vector{T}
         # STEP 4:   define l, mu, and z first points
         L, MU           = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
         Z, C            = Vector{Float64}(undef, m), Vector{Float64}(undef, m)
-        @inbounds L[1], MU[1]     = 2H[1], 0.5
-        @inbounds Z[1]            = ALPHA[1] / L[1]
+        @inbounds L[1], MU[1]     = 2first(H), 0.5
+        @inbounds Z[1]            = first(ALPHA) / first(L)
         # STEP 5:   build lists l, mu, and z
         for i ∈ 2:1:n
             @inbounds L[i]  = 2(X[i+1] - X[i-1]) - H[i-1]*MU[i-1]
