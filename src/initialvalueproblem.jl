@@ -8,6 +8,8 @@ export improved_euler
 export modified_euler
 export runge_kutta
 
+import ..NumericalMethods: solve
+
 using StaticArrays
 
 # Ch. 5 (p. 259)

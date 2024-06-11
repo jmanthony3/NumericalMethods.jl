@@ -11,7 +11,7 @@ export linearleastsquares
 using IntervalArithmetic, IntervalRootFinding
 using Polynomials: Polynomial, roots
 using StaticArrays
-using Statistics
+using Statistics: median
 using Symbolics
 
 """

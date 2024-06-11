@@ -1,5 +1,6 @@
 module NumericalMethods
 
+include("base.jl")
 export solve
 export newton_raphson
 

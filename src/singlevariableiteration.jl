@@ -1,12 +1,14 @@
 module SingleVariableIterations
 
 export SingleVariableIteration
-export solve
+# export solve
 export bisection
 export fixed_point
 export newton_raphson
 export secant_method
 export false_position
+
+import ..NumericalMethods: solve, newton_raphson
 
 using Symbolics
 

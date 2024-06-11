@@ -9,13 +9,13 @@ export positive_definite
 export tridiagonality
 export find_omega
 export jacobian_form
-export solve
+# export solve
 export gauss_seidel
 export jacobi
-export newton_raphson
+# export newton_raphson
 export successive_relaxation
 
-import ..NumericalMethods: newton_raphson
+import ..NumericalMethods: solve, newton_raphson
 
 using DataFrames
 using LinearAlgebra

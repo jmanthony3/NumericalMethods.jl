@@ -4,8 +4,9 @@ export n1derivative
 export endpoint
 export midpoint
 
-using Symbolics
 import ..Interpolations: lagrange_coefficient
+
+using Symbolics
 
 # Ch. 4 (p. 171)
 ## 4.1 (p. 172)

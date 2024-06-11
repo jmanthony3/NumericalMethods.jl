@@ -16,7 +16,13 @@ Depth   = 1
 
 ## Index
 ```@index
-Modules = [NumericalMethods]
+Modules = [
+    NumericalMethods.SingleVariableIterations,
+    NumericalMethods.Interpolations,
+    NumericalMethods.Derivatives,
+    NumericalMethods.Integrations,
+    NumericalMethods.InitialValueProblems,
+    NumericalMethods.MultiVariableIterations]
 Pages   = [
     "singlevariableiteration.md",
     "interpolation.md",
