@@ -19,7 +19,7 @@ import ..NumericalMethods: solve, newton_raphson
 
 using DataFrames
 using LinearAlgebra
-using Symbolics
+using Symbolics: Num, @variables, Differential, simplify, expand_derivatives, build_function, value
 
 # Ch. 7 (p. 437)
 """
@@ -185,7 +185,7 @@ function solve(mvi::MultiVariableIteration;
     x = mvi.x
     if method == :newton_raphson
         J(x) = if isnothing(jacobian)
-            convert.(Float64, Symbolics.value.(showjacobian(jacobian_form(mvi.A, variables), x)))
+            convert.(Float64, value.(showjacobian(jacobian_form(mvi.A, variables), x)))
         else
             jacobian(x)
         end

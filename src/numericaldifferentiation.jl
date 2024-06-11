@@ -6,7 +6,7 @@ export midpoint
 
 import ..Interpolations: lagrange_coefficient
 
-using Symbolics
+using Symbolics: @variables, Differential, simplify, expand_derivatives, build_function
 
 # Ch. 4 (p. 171)
 ## 4.1 (p. 172)

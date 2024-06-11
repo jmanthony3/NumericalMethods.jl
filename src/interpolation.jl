@@ -12,7 +12,7 @@ using IntervalArithmetic, IntervalRootFinding
 using Polynomials: Polynomial, roots
 using StaticArrays
 using Statistics: median
-using Symbolics
+using Symbolics: Num, @variables, Differential, simplify, expand_derivatives, build_function, value, degree
 
 """
     linearinterpolation(x0, y0, x1, y1, x)
@@ -76,9 +76,9 @@ function lagrange(x::T, f::T;
             g_eval          = build_function(g, t, expression=Val{false})
             gp              = simplify(expand_derivatives(Dt(g)); expand=true)
             gp_eval         = build_function(gp, t, expression=Val{false})
-            coeffs_sorted   = if hasproperty(Symbolics.value(gp), :dict)
-                coeffs_map      = Symbolics.value(gp).dict
-                exps            = Symbolics.degree.(keys(coeffs_map))
+            coeffs_sorted   = if hasproperty(value(gp), :dict)
+                coeffs_map      = value(gp).dict
+                exps            = degree.(keys(coeffs_map))
                 collect(values(coeffs_map))[sortperm(exps)]
             else
                 []

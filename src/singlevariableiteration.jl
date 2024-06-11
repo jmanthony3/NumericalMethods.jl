@@ -10,7 +10,7 @@ export false_position
 
 import ..NumericalMethods: solve, newton_raphson
 
-using Symbolics
+using Symbolics: @variables, Differential, simplify, expand_derivatives, build_function
 
 # Ch. 2 (p. 47)
 """
