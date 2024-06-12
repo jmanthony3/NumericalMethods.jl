@@ -1,5 +1,5 @@
 using NumericalMethods
-using Symbolics
+using Symbolics: @variables
 using Test
 
 @testset verbose=true "NumericalMethods.jl" begin
