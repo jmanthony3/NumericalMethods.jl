@@ -17,8 +17,9 @@ export successive_relaxation
 
 import ..NumericalMethods: solve, newton_raphson
 
-using DataFrames
+using DataFrames # KEY: [JSSv107i04]
 using LinearAlgebra
+# KEY: [10.1145/3511528.3511535]
 using Symbolics: Num, @variables, Differential, simplify, expand_derivatives, build_function, value
 
 # Ch. 7 (p. 437)

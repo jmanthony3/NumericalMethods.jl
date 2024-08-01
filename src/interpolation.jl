@@ -8,10 +8,11 @@ export clamped
 export bezier
 export linearleastsquares
 
-using IntervalArithmetic, IntervalRootFinding
+using IntervalArithmetic, IntervalRootFinding # KEY: [IntervalArithmetic.jl]
 using Polynomials: Polynomial, roots
 using StaticArrays
 using Statistics: median
+# KEY: [10.1145/3511528.3511535]
 using Symbolics: Num, @variables, Differential, simplify, expand_derivatives, build_function, value, degree
 
 """

@@ -1,5 +1,5 @@
 using NumericalMethods
-using Symbolics: @variables
+using Symbolics: @variables # KEY: [10.1145/3511528.3511535]
 using Test
 
 @testset verbose=true "NumericalMethods.jl" begin
