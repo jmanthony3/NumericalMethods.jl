@@ -18,12 +18,14 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Base" => "base.md",
         "Single-Variable Iteration" => "singlevariableiteration.md",
         "Interpolation" => "interpolation.md",
         "Numerical Differentiation" => "numericaldifferentiation.md",
         "Numerical Integration" => "numericalintegration.md",
         "Initial-Value Problem" => "initialvalueproblem.md",
-        "Multi-Variable Iteration" => "multivariableiteration.md"
+        "Multi-Variable Iteration" => "multivariableiteration.md",
+        "System of Equation" => "systemofequation.md"
     ],
 )
 

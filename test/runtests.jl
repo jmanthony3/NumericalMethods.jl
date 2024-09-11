@@ -1,3 +1,4 @@
+using LinearAlgebra: diag, diagm
 using NumericalMethods
 using Symbolics: @variables # KEY: [10.1145/3511528.3511535]
 using Test
@@ -114,5 +115,24 @@ using Test
         mvi = MultiVariableIteration(A, x0, b, 5, tol)
         @test all(isapprox.(round.(newton_raphson(mvi, variables); digits=10), [
             0.5000000000, -1.375e-11, -0.5235987756]; atol=10tol))
+    end
+    @testset "System of Equations" begin
+        A   = float.([
+            [4 1 1 0 1]
+            [1 3 1 1 0]
+            [1 1 5 -1 -1]
+            [0 1 -1 4 0]
+            [1 0 -1 0 4]])
+        b   = fill(6., size(A)[1])
+        x0  = ones(length(b))
+        tol = 10^-5.
+        SOE = SystemOfEquation(A, b, 100, tol)
+        # df = gaussian_elimination(SOE)
+        @test all(isapprox.(round.(steepest_descent(SOE, x0); digits=6), [
+            0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
+        @test all(isapprox.(round.(conjugate_gradient(SOE, x0); digits=6), [
+            0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
+        @test all(isapprox.(round.(conjugate_gradient(SOE, x0; C=diagm(0 => diag(A))); digits=6), [
+            0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
     end
 end

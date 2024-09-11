@@ -3,6 +3,12 @@ module NumericalMethods
 include("base.jl")
 export solve
 export newton_raphson
+export diagonality
+export spectral_radius
+export condition_number
+export symmetry
+export positive_definite
+export tridiagonality
 
 include("singlevariableiteration.jl")
 using .SingleVariableIterations
@@ -47,12 +53,12 @@ export runge_kutta
 include("multivariableiteration.jl")
 using .MultiVariableIterations
 export MultiVariableIteration
-export diagonality
-export spectral_radius
-export condition_number
-export symmetry
-export positive_definite
-export tridiagonality
+# export diagonality
+# export spectral_radius
+# export condition_number
+# export symmetry
+# export positive_definite
+# export tridiagonality
 export find_omega
 export jacobian_form
 # export solve
@@ -60,5 +66,13 @@ export gauss_seidel
 export jacobi
 # export newton_raphson
 export successive_relaxation
+
+include("systemofequation.jl")
+using .SystemOfEquations
+export SystemOfEquation
+export conjugate_gradient
+export gaussian_elimination
+export steepest_descent
+# export solve
 
 end
