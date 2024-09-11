@@ -48,8 +48,8 @@ Key comments:
   - [ ] QR Algorithm
 - [ ] Solving Systems of Equations (SOE)
   - [ ] Gaussian Elimination
-  - [ ] Steepest Descent
-  - [ ] Conjugate Gradient
+  - [x] Steepest Descent
+  - [x] Conjugate Gradient
 - [x] Multi-Variable Iteration (MVI)
   - [x] Jacobi
   - [x] Gauss-Seidel
