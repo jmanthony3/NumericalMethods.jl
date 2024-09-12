@@ -118,6 +118,19 @@ using Test
     end
     @testset "System of Equations" begin
         # systems of equations
+        ## gaussian_elimination
+        A = float.([
+            [1 1 0 3]
+            [2 1 -1 1]
+            [3 -1 -1 2]
+            [-1 2 3 -1]
+        ])
+        b = float.([4, 1, -3, 4])
+        tol = 10^-3.
+        SOE = SystemOfEquation(A, b, 100, tol)
+        @test all(isapprox.(round.(gaussian_elimination(SOE);                           digits=1), [
+            -1, 2, 0, 1]; atol=10tol))
+        ## steepest_descent ~ gaussian_elimination
         A   = float.([
             [4 1 1 0 1]
             [1 3 1 1 0]
@@ -125,17 +138,13 @@ using Test
             [0 1 -1 4 0]
             [1 0 -1 0 4]])
         b   = fill(6., size(A)[1])
-        x0  = ones(length(b))
         tol = 10^-5.
+        x0  = ones(length(b))
         SOE = SystemOfEquation(A, b, 100, tol)
-        # df = gaussian_elimination(SOE)
-        ## steepest_descent
         @test all(isapprox.(round.(steepest_descent(SOE, x0);                           digits=6), [
             0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
-        ## conjugate_gradient
         @test all(isapprox.(round.(conjugate_gradient(SOE, x0);                         digits=6), [
             0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
-        ## conjugate_gradient (pre-conditioned)
         @test all(isapprox.(round.(conjugate_gradient(SOE, x0, diagm(0 => diag(A)));    digits=6), [
             0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
     end

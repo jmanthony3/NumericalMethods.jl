@@ -6,7 +6,8 @@ export gaussian_elimination
 export steepest_descent
 # export solve
 
-import ..NumericalMethods: positive_definite
+# import ..NumericalMethods: positive_definite
+using NumericalMethods: positive_definite
 
 using LinearAlgebra
 
@@ -54,7 +55,7 @@ function gaussian_elimination(SOE::SystemOfEquation)::Vector{Float64}
         for j in i+1:1:n
             aijxj += Aug[i,j] * x[j]
         end
-        x[i] = (Aug[i,n] - aijxj) / Aug[i,i]
+        x[i] = (Aug[i,n+1] - aijxj) / Aug[i,i]
     end
     return x
     # return (k <= N && isassigned(approximations, k)) ? approximations[k] : NaN

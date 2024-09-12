@@ -46,8 +46,8 @@ Key comments:
   - [x] Power Method
   - [x] Inverse Power Method
   - [x] QR Algorithm
-- [ ] Solving Systems of Equations (SOE)
-  - [ ] Gaussian Elimination
+- [x] Solving Systems of Equations (SOE)
+  - [x] Gaussian Elimination
   - [x] Steepest Descent
   - [x] Conjugate Gradient
 - [x] Multi-Variable Iteration (MVI)
