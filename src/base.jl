@@ -27,7 +27,12 @@ Finds the spectral radius of matrix, `A`.
 # Notes
 ``ρ(\\mathbf{A}) = \\max|λ|``, where λ is the set of eigvalsvalues for `A` [burdenNumericalAnalysis2016]_.
 """
-spectral_radius(A::Matrix) = maximum(abs.(eigvals(A)))
+spectral_radius(A::Matrix, N::Int64=100, tol::Real=10^-6)   = maximum(abs.(if issymmetric(A) && tridiagonality(A)
+    qr_algorithm(Eigenvalue(A, N, tol))
+else
+    eigvals(A)
+end))
+# spectral_radius(A::Matrix)                                  = maximum(abs.(eigvals(A)))
 
 """
     condition_number(A)
@@ -73,7 +78,12 @@ end
 
 Determines whether matrix, `A` is positive definite.
 """
-positive_definite(A::Matrix) = issymmetric(A) && all(eigvals(A) .>= 0.)
+positive_definite(A::Matrix, N::Int64=100, tol::Real=10^-6) = issymmetric(A) && all(if tridiagonality(A)
+    qr_algorithm(Eigenvalue(A, N, tol))
+else
+    eigvals(A)
+end .>= 0.)
+# positive_definite(A::Matrix)                                = issymmetric(A) && all(eigvals(A) .>= 0.)
 
 """
     tridiagonality(A)

@@ -34,27 +34,27 @@ end
 __find_xk(T, x, c) = T * x + c
 
 """
-    find_omega(mvi[, omega=0.])
+    find_omega(MVI[, omega=0.])
 
-Find the optimum relaxation parameter, `omega` for `mvi.A` and `mvi.x`, if possible.
+Find the optimum relaxation parameter, `omega` for `MVI.A` and `MVI.x`, if possible.
 
 # Notes
-If 0 < `omega` < 2, then method will converge regardless of choice for `mvi.x`.
-If matrix, `mvi.A` is tridiagonal, then the spectral radius of Gauss-Seidel's T-matrix, ``\\mathbf{T}\\_{g}`` is used to calculate ``ω := 2 / (1 + \\sqrt{(1 - `spectral_radius`(\\mathbf{T}\\_{g})})`` [burdenNumericalAnalysis2016]_.
+If 0 < `omega` < 2, then method will converge regardless of choice for `MVI.x`.
+If matrix, `MVI.A` is tridiagonal, then the spectral radius of Gauss-Seidel's T-matrix, ``\\mathbf{T}\\_{g}`` is used to calculate ``ω := 2 / (1 + \\sqrt{(1 - `spectral_radius`(\\mathbf{T}\\_{g})})`` [burdenNumericalAnalysis2016]_.
 """
-function find_omega(mvi::MultiVariableIteration, omega::Float64=0.)::Float64
-    n, m = size(mvi.A)
-    xn, xt = mvi.x, transpose(mvi.x)
-    y = (xt * mvi.A) * xn
-    theorem_6_22 = issymmetric(mvi.A) && y > 0.
+function find_omega(MVI::MultiVariableIteration, omega::Float64=0.)::Float64
+    n, m = size(MVI.A)
+    xn, xt = MVI.x, transpose(MVI.x)
+    y = (xt * MVI.A) * xn
+    theorem_6_22 = issymmetric(MVI.A) && y > 0.
     i, theorem_6_25 = 2, true; while i <= n && theorem_6_25 == true
-        theorem_6_25 = det(mvi.A[begin:i, begin:i]) > 0; i += 1
+        theorem_6_25 = det(MVI.A[begin:i, begin:i]) > 0; i += 1
     end
     return if theorem_6_22 || theorem_6_25
-        if tridiagonality(mvi.A)
-            D   = diagm(diag(mvi.A))
-            L   = diagm(-1 => diag(mvi.A, -1))
-            U   = diagm(1  => diag(mvi.A, 1))
+        if tridiagonality(MVI.A)
+            D   = diagm(diag(MVI.A))
+            L   = diagm(-1 => diag(MVI.A, -1))
+            U   = diagm(1  => diag(MVI.A, 1))
             Tg  = inv(D - L) * U
             2. / (1. + √(1 - spectral_radius(Tg)))
         else
@@ -86,28 +86,28 @@ function showjacobian(J::Matrix{Function}, x::Union{Tuple{Vararg{Num}}, Vector{F
 end
 
 """
-    solve(mvi::MultiVariableIteration[; method=:jacobi, omega=0., variables, jacobian])
+    solve(MVI::MultiVariableIteration[; method=:jacobi, omega=0., variables, jacobian])
 
 Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` according to `method` ∈ {`:jacobi` (default), `:gauss_seidel`, `:successive_relaxation`, `:newton_raphson`}.
 
 Each `method` has an equivalent convenience function.
-E.g. `solve(mvi; method=:jacobi)` ≡ `jacobi(mvi)`.
+E.g. `solve(MVI; method=:jacobi)` ≡ `jacobi(MVI)`.
 """
-function solve(mvi::MultiVariableIteration;
+function solve(MVI::MultiVariableIteration;
         method      ::Symbol                            = :jacobi,
         omega       ::Float64                           = 0.,
         variables   ::Union{Nothing, Tuple{Vararg{Num}}}= nothing,
         jacobian    ::Union{Nothing, Function}          = nothing)::Vector{Float64}
-    x = mvi.x
+    x = MVI.x
     if method == :newton_raphson
         J(x) = if isnothing(jacobian)
-            convert.(Float64, value.(showjacobian(jacobian_form(mvi.A, variables), x)))
+            convert.(Float64, value.(showjacobian(jacobian_form(MVI.A, variables), x)))
         else
             jacobian(x)
         end
     elseif method == :successive_relaxation
         if omega == 0.
-            ω = find_omega(mvi)
+            ω = find_omega(MVI)
         # elseif isinstance(omega, (int, float)) && omega > 0.
         #     w = self.find_omega(omega=omega)
         #     logging.info(f"omega = {omega} given. Which is not optimum: {w}")
@@ -116,37 +116,38 @@ function solve(mvi::MultiVariableIteration;
             ω = omega
         end
     end
-    k, n, approximations, errors = 1, length(x), [x], [mvi.tol*10]
-    while errors[end] > mvi.tol && k <= mvi.N
-        xk = zeros(eltype(mvi.x), n)
+    k, n, approximations, errors = 1, length(x), [x], [MVI.tol*10]
+    while last(errors) > MVI.tol && k <= MVI.N
+        xk = zeros(eltype(MVI.x), n)
         for i ∈ 1:1:n
             if method == :newton_raphson
-                g = [f(x...) for f ∈ mvi.A]
+                g = [f(x...) for f ∈ MVI.A]
                 xk = x + (J(x) \ -g)
             else
                 xk[i] = (if method ∈ (:gauss_seidel, :successive_relaxation)
-                    y1 = sum([mvi.A[i, j] * xk[j] for j ∈ 1:1:i])
+                    y1 = sum([MVI.A[i, j] * xk[j] for j ∈ 1:1:i])
                     y2 = 0.; for j ∈ i+1:1:n
-                        y2 += mvi.A[i, j] * x[j]
+                        y2 += MVI.A[i, j] * x[j]
                     end
                     -y1 - y2
                 elseif method == :jacobi
-                    -sum([j != i ? mvi.A[i, j] * x[j] : 0. for j ∈ 1:1:n])
-                end + mvi.b[i]) / mvi.A[i, i]
+                    -sum([j != i ? MVI.A[i, j] * x[j] : 0. for j ∈ 1:1:n])
+                end + MVI.b[i]) / MVI.A[i, i]
             end
         end
         if method == :successive_relaxation
             xk = [(1. - ω) * x[i] + ω * xk[i] for i ∈ 1:1:n]
         end
-        push!(approximations,   xk)
+        # push!(approximations,   xk)
         push!(errors,           norm(xk - x))
         x = xk; k += 1 # iterate to k + 1
     end
     return x
+    # return (k <= N && isassigned(approximations, k)) ? approximations[k] : NaN
 end
 
 """
-    gauss_seidel(mvi)
+    gauss_seidel(MVI)
 
 Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Gauss-Seidel Method**.
 
@@ -158,10 +159,10 @@ The core algorithm by which method marches through iterations:
         \\vec{x}^{(k - 1)} + \\bigl( (\\mathbf{D} - \\mathbf{L})^{-1} \\bigr) ⋅ \\vec{b}
 ```
 """
-gauss_seidel(mvi::MultiVariableIteration) = solve(mvi; method=:gauss_seidel)
+gauss_seidel(MVI::MultiVariableIteration) = solve(MVI; method=:gauss_seidel)
 
 """
-    jacobi(mvi)
+    jacobi(MVI)
 
 Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Jacobi Method** to find ``\\vec{x}``.
 
@@ -172,16 +173,16 @@ The core algorithm by which method marches through iterations:
         \\vec{x}^{(k - 1)} + ( \\mathbf{D}^{-1} ) ⋅ \\vec{b}
 ```
 """
-jacobi(mvi::MultiVariableIteration) = solve(mvi; method=:jacobi)
+jacobi(MVI::MultiVariableIteration) = solve(MVI; method=:jacobi)
 
 """
-    newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}}[; jacobian=nothing])
+    newton_raphson(MVI::MultiVariableIteration, variables::Tuple{Vararg{Num}}[; jacobian=nothing])
 
 Solve non-linear systems of equations, ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Newton-Raphson Method**.
 
-Here, `mvi.A` should be a vector of functions wherein each variable is represented.
+Here, `MVI.A` should be a vector of functions wherein each variable is represented.
 **Method will go faster if `jacobian` is pre-defined.**
-_Otherwise, the Jacobian matrix of `mvi.A` will be internally constructed._
+_Otherwise, the Jacobian matrix of `MVI.A` will be internally constructed._
 
 # Examples
 ```jldoctest; output=false
@@ -192,10 +193,10 @@ A               = [f1, f2, f3]
 b               = zeros(length(A))
 x0              = [0.1, 0.1, -0.1]
 tol             = 1e-9
-mvi             = MultiVariableIteration(A, x0, b, 5, tol)
+MVI             = MultiVariableIteration(A, x0, b, 5, tol)
 using Symbolics
 @variables x1, x2, x3
-newton_raphson(mvi, (x1, x2, x3))
+newton_raphson(MVI, (x1, x2, x3))
 
 # output
 
@@ -205,18 +206,18 @@ newton_raphson(mvi, (x1, x2, x3))
  -0.5235987755982989
 ```
 """
-newton_raphson(mvi::MultiVariableIteration, variables::Tuple{Vararg{Num}};
-    jacobian::Union{Nothing, Function}=nothing) = solve(mvi;
+newton_raphson(MVI::MultiVariableIteration, variables::Tuple{Vararg{Num}};
+    jacobian::Union{Nothing, Function}=nothing) = solve(MVI;
 method=:newton_raphson, variables=variables, jacobian=jacobian)
 
 """
-    successive_relaxation(mvi[, omega=0.])
+    successive_relaxation(MVI[, omega=0.])
 
 Solve ``\\vec{x} = \\mathbf{A}^{-1}\\vec{b}`` via the **Successive Relaxation Method**.
 Method is Successive Over-Relaxation (SOR) if `omega` > 1, Successive Under-Relaxation (SUR) if `omega` < 1, and reduces to Gauss-Seidel if `omega` = 1.
 
 # Notes
-SOR and SUR accelerate or deccelerate convergence of `gauss_seidel()`, respectively, by decreasing or increasing the spectral radius of `mvi.A`.
+SOR and SUR accelerate or deccelerate convergence of `gauss_seidel()`, respectively, by decreasing or increasing the spectral radius of `MVI.A`.
 The core algorithm by which method marches through iterations:
 ```math
     \\vec{x}^{(k)} = \\bigl( (\\mathbf{D} - ω\\mathbf{L})^{-1} * ((1 - ω)*\\mathbf{D} + ω\\mathbf{U}) \\bigr) ⋅
@@ -225,6 +226,6 @@ The core algorithm by which method marches through iterations:
 
 If left unspecified, and if possible, an optimum relaxation parameter, ω will be calculated by `find_omega()`.
 """
-successive_relaxation(mvi::MultiVariableIteration, omega::Float64=0.) = solve(mvi; method=:successive_relaxation, omega=omega)
+successive_relaxation(MVI::MultiVariableIteration, omega::Float64=0.) = solve(MVI; method=:successive_relaxation, omega=omega)
 
 end

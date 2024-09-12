@@ -75,4 +75,11 @@ export gaussian_elimination
 export steepest_descent
 # export solve
 
+include("eigenvalue.jl")
+using .Eigenvalues
+export Eigenvalue
+export power_method
+export inverse_power_method
+export qr_algorithm
+
 end

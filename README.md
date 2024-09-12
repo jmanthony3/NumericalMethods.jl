@@ -42,10 +42,10 @@ Key comments:
   - [x] Bezier Curves
 - [ ] Extrapolation methods
   - [ ] Richardson's Extrapolation
-- [ ] Solving for eigenvalues
-  - [ ] Power Method
-  - [ ] Inverse Power Method
-  - [ ] QR Algorithm
+- [x] Solving for eigenvalues
+  - [x] Power Method
+  - [x] Inverse Power Method
+  - [x] QR Algorithm
 - [ ] Solving Systems of Equations (SOE)
   - [ ] Gaussian Elimination
   - [x] Steepest Descent

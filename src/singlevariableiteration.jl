@@ -28,16 +28,16 @@ struct SingleVariableIteration{T<:Real}
 end
 
 """
-    maximum_slope(svi::SingleVariableIteration)
+    maximum_slope(SVI::SingleVariableIteration)
 
 Find the greatest value for first derivative of function.
 """
-function maximum_slope(svi::SingleVariableIteration)::AbstractFloat
+function maximum_slope(SVI::SingleVariableIteration)::AbstractFloat
     @variables x
     Dx  = Differential(x)
-    df  = simplify(expand_derivatives(Dx(svi.f(x))); expand=true)
+    df  = simplify(expand_derivatives(Dx(SVI.f(x))); expand=true)
     df  = build_function(df, x, expression=Val{false})
-    return maximum(abs.(df.(range(svi.a, svi.b, length=1000))))
+    return maximum(abs.(df.(range(SVI.a, SVI.b, length=1000))))
 end
 
 """
@@ -49,13 +49,13 @@ Find greatest integer for maximum iterations within tolerance.
 Acceptable values for `method` ∈ {`:bisection`, `:fixed_point`, `:newton_raphson`, `:secant_method`, `:false_position`}.
 Initial guess, `p0` for function solution is not needed for `:bisection` method.
 """
-function maximum_iterations(svi::SingleVariableIteration, method::Symbol, p0::Float64 = 0.;
+function maximum_iterations(SVI::SingleVariableIteration, method::Symbol, p0::Float64 = 0.;
         k::Float64=NaN)::Int64
     if method == :bisection
-        return ceil(-log(svi.tol / (svi.b - svi.a))
+        return ceil(-log(SVI.tol / (SVI.b - SVI.a))
             / log(2))
     elseif method ∈ (:fixed_point, :newton_raphson, :secant_method, :false_position)
-        return ceil(-log(svi.tol / max(p0 - svi.a, svi.b - p0))
+        return ceil(-log(SVI.tol / max(p0 - SVI.a, SVI.b - p0))
             / log(k))
     else
         error("Method must be: `:bisection`, `:fixed_point`, `:newton_raphson`, `:secant_method`, or `:false_position`.")
@@ -64,7 +64,7 @@ end
 
 ## 2.1 (p. 48)
 """
-    solve(svi::SingleVariableIteration[; method=:bisection, p0, p1, df])
+    solve(SVI::SingleVariableIteration[; method=:bisection, p0, p1, df])
 
 Attempt to find where f(p) = 0 according to `method` ∈ {`:bisection` (default), `:fixed_point`, `:newton_raphson`, `:secant_method`, `:false_position`}.
 Each `method` also has a convenience function.
@@ -75,21 +75,21 @@ Convergence Rates:
 
 `:bisection` is default because will always converge to a solution but is not the quickest.
 """
-function solve(svi::SingleVariableIteration;
+function solve(SVI::SingleVariableIteration;
     method  ::Symbol                    = :bisection,
     p0      ::T                         = 0.,
     p1      ::T                         = 0.,
     df      ::Union{Nothing, Function}  = nothing
 )::Float64 where {T<:Float64}
-    f, a, b = svi.f, svi.a, svi.b
+    f, a, b = SVI.f, SVI.a, SVI.b
     if method ∈ (:bisection, :secant_method, :false_position)
         # check for opposite signs
         if (method == :bisection ? f(a)*f(b) : f(p0)*f(p1)) < 0
-            k, N        = 1, svi.n
+            k, N        = 1, SVI.n
             g, r        = Vector{Float64}(undef, N), Vector{Float64}(undef, N)
             g[k], r[k]  = f(a), 1.
             # exit by whichever condition is `true` first
-            while r[k] >= svi.tol && k < N
+            while r[k] >= SVI.tol && k < N
                 if method == :bisection
                     x       = (b - a) / 2.
                     p       = a + x                         # new value, p
@@ -129,7 +129,7 @@ function solve(svi::SingleVariableIteration;
             df  = build_function(df, x, expression=Val{false})
         end
         # initialize
-        k, N = 1, svi.n
+        k, N = 1, SVI.n
         g, r = Vector{Float64}(undef, N), Vector{Float64}(undef, N)
         g[k] = f(if method == :fixed_point
             (a + b) / 2.
@@ -138,7 +138,7 @@ function solve(svi::SingleVariableIteration;
         end)
         r[k] = 1.
         # exit by whichever condition is `true` first
-        while r[k] >= svi.tol && k < N
+        while r[k] >= SVI.tol && k < N
             p = if method == :fixed_point
                 f(p0)                           # new value, p
             elseif method == :newton_raphson
@@ -156,7 +156,7 @@ function solve(svi::SingleVariableIteration;
 end
 
 """
-    bisection(svi::SingleVariableIteration)
+    bisection(SVI::SingleVariableIteration)
 
 Root-finding method: f(x) = 0.
 Search for solution by halving the bounds such that `a` and `b` initially yield opposite signs in function.
@@ -165,11 +165,11 @@ Search for solution by halving the bounds such that `a` and `b` initially yield 
 Relying on the **Intermediate Value Theorem** (IVT), this is a bracketed, root-finding method.
 This method is rather slow to converge but will always converge to a solution; therefore, is a good starter method.
 """
-bisection(svi::SingleVariableIteration) = solve(svi; method=:bisection)
+bisection(SVI::SingleVariableIteration) = solve(SVI; method=:bisection)
 
 ## 2.2 (p. 55)
 """
-    fixed_point(svi::SingleVariableIteration, p0)
+    fixed_point(SVI::SingleVariableIteration, p0)
 
 Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
 
@@ -185,11 +185,11 @@ Theorem:
     If g'(x) exists on [a, b] and a positive constant, k < 1 exist with {|g'(x)| ≤ k | x ∈ (a, b)}, then there is exactly one fixed-point, p ∈ [a, b].
 Converges by ``\\mathcal{O}(\\text{linear})`` if g'(p) ≠ 0, and ``\\mathcal{O}(\\text{quadratic})`` if g'(p) = 0 and g''(p) < M, where M = g''(ξ) that is the error function.
 """
-fixed_point(svi::SingleVariableIteration, p0::Float64) = solve(svi; method=:fixed_point, p0=p0)
+fixed_point(SVI::SingleVariableIteration, p0::Float64) = solve(SVI; method=:fixed_point, p0=p0)
 
 ## 2.3 (p. 66)
 """
-    newton_raphson(svi::SingleVariableIteration, p0[; df=nothing])
+    newton_raphson(SVI::SingleVariableIteration, p0[; df=nothing])
 
 Attempt root-finding method with initial guess, `p0` in [a, b] by solving the equation g(p) = p via f(p) - p = 0.
 `df` will be the first derivative of function if not given.
@@ -208,12 +208,12 @@ Technique based on first Taylor polynomial expansion of f about ``p_{0}`` (that 
 
 See `fixed_point()` for theorem.
 """
-newton_raphson(svi::SingleVariableIteration, p0::Float64;
+newton_raphson(SVI::SingleVariableIteration, p0::Float64;
     df::Union{Nothing, Function}=nothing
-) = solve(svi; method=:newton_raphson, p0=p0, df=df)
+) = solve(SVI; method=:newton_raphson, p0=p0, df=df)
 
 """
-    secant_method(svi::SingleVariableIteration, p0, p1)
+    secant_method(SVI::SingleVariableIteration, p0, p1)
 
 Attempt root-finding method with initial guesses such that `p0` and `p1` in [a, b] yield opposite signs in function.
 
@@ -226,11 +226,11 @@ Method is less computationally expensive than `newton_raphson()` but may converg
 
 See `fixed_point()` for theorem.
 """
-secant_method(svi::SingleVariableIteration, p0::Float64, p1::Float64
-) = solve(svi; method=:secant_method, p0=p0, p1=p1)
+secant_method(SVI::SingleVariableIteration, p0::Float64, p1::Float64
+) = solve(SVI; method=:secant_method, p0=p0, p1=p1)
 
 """
-    false_position(svi::SingleVariableIteration, p0, p1)
+    false_position(SVI::SingleVariableIteration, p0, p1)
 
 Attempt root-finding method with initial guesses such that `p0` and `p1` in [a, b] yield opposite signs in function.
 
@@ -241,7 +241,7 @@ Similar to, but slower to converge than, the `secant_method()` by including a te
 
 See `fixed_point()` for theorem.
 """
-false_position(svi::SingleVariableIteration, p0::Float64, p1::Float64
-) = solve(svi; method=:false_position, p0=p0, p1=p1)
+false_position(SVI::SingleVariableIteration, p0::Float64, p1::Float64
+) = solve(SVI; method=:false_position, p0=p0, p1=p1)
 
 end

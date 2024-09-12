@@ -11,7 +11,8 @@ Pages   = [
     "numericalintegration.md",
     "initialvalueproblem.md",
     "multivariableiteration.md",
-    "systemofequation.md"
+    "systemofequation.md",
+    "eigenvalue.md"
 ]
 Depth   = 1
 ```
@@ -26,7 +27,8 @@ Modules = [
     NumericalMethods.Integrations,
     NumericalMethods.InitialValueProblems,
     NumericalMethods.MultiVariableIterations,
-    NumericalMethods.SystemOfEquations]
+    NumericalMethods.SystemOfEquations,
+    NumericalMethods.Eigenvalues]
 Pages   = [
     "base.md",
     "singlevariableiteration.md",
@@ -35,6 +37,7 @@ Pages   = [
     "numericalintegration.md",
     "initialvalueproblem.md",
     "multivariableiteration.md",
-    "systemofequation.md"
+    "systemofequation.md",
+    "eigenvalue.md"
 ]
 ```

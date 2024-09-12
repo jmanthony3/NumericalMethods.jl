@@ -8,19 +8,19 @@ using Test
         # single-variable iteration
         f(x)    = x^3 + 4x^2 - 10
         a, b, N, tol = 1., 2., 50, 10^-9
-        svi     = SingleVariableIteration(f, a, b, N, tol)
-        @test round(bisection(svi);                     digits=6)       == 1.365230
+        SVI     = SingleVariableIteration(f, a, b, N, tol)
+        @test round(bisection(SVI);                     digits=6)       == 1.365230
         g(x)    = 2 \ √(10 - x^3)
-        svi     = SingleVariableIteration(g, a, b, N, tol)
-        @test round(fixed_point(svi, 1.5);              digits=6)       == 1.365230
+        SVI     = SingleVariableIteration(g, a, b, N, tol)
+        @test round(fixed_point(SVI, 1.5);              digits=6)       == 1.365230
         h(x)    = cos(x) - x
         a, b, N, tol = 0., pi/2., 50, 10^-6
-        svi     = SingleVariableIteration(h, a, b, N, tol)
-        @test round(newton_raphson(svi, pi / 4.);       digits=6)       == 0.739085
-        @test round(secant_method(svi, 0.5, pi / 4.);   digits=6)       == 0.739085
+        SVI     = SingleVariableIteration(h, a, b, N, tol)
+        @test round(newton_raphson(SVI, pi / 4.);       digits=6)       == 0.739085
+        @test round(secant_method(SVI, 0.5, pi / 4.);   digits=6)       == 0.739085
         a, b, N, tol = 0., pi/2., 100, 10^-1
-        svi     = SingleVariableIteration(h, a, b, N, tol)
-        @test round(false_position(svi, 0.5, pi / 4.);  digits=6)       == 0.739058
+        SVI     = SingleVariableIteration(h, a, b, N, tol)
+        @test round(false_position(SVI, 0.5, pi / 4.);  digits=6)       == 0.739058
     end
     @testset "Interpolation" begin
         # interpolation
@@ -71,8 +71,8 @@ using Test
         f(t, y) = y - t^2 + 1
         a, h    = 0., 0.2
         N, α    = 10, 0.5
-        ivp     = InitialValueProblem(f, a, h, α, N)
-        @test round.(runge_kutta(ivp);                  digits=6)       == [
+        IVP     = InitialValueProblem(f, a, h, α, N)
+        @test round.(runge_kutta(IVP);                  digits=6)       == [
             0.5,        0.829293,   1.214076,
             1.648922,   2.127203,   2.640823,
             3.179894,   3.732340,   4.283409,
@@ -85,11 +85,11 @@ using Test
         b   = [6., 25., -11., 15]
         x0  = [0., 0., 0., 0.]
         tol = 1e-3
-        mvi = MultiVariableIteration(A, x0, b, 10, tol)
-        @test round.(jacobi(mvi);                       digits=4)       == [
+        MVI = MultiVariableIteration(A, x0, b, 10, tol)
+        @test round.(jacobi(MVI);                       digits=4)       == [
             1.0001,     1.9998,    -0.9998,     0.9998]
-        mvi = MultiVariableIteration(A, x0, b, 5, tol)
-        @test round.(gauss_seidel(mvi);                 digits=4)       == [
+        MVI = MultiVariableIteration(A, x0, b, 5, tol)
+        @test round.(gauss_seidel(MVI);                 digits=4)       == [
             1.0001,     2.0000,    -1.0000,     1.0000]
         ## gauss_seidel ~ successive_relaxation
         A   = [4. 3. 0.; 3. 4. -1.; 0. -1. 4.]
@@ -97,10 +97,10 @@ using Test
         x0  = ones(length(b))
         tol = 1e-3
         omega = 1.25
-        mvi = MultiVariableIteration(A, x0, b, 7, tol)
-        @test round.(gauss_seidel(mvi);                 digits=7)       == [
+        MVI = MultiVariableIteration(A, x0, b, 7, tol)
+        @test round.(gauss_seidel(MVI);                 digits=7)       == [
             3.0134110,  3.9888241, -5.0027940]
-        @test all(isapprox.(round.(successive_relaxation(mvi, omega); digits=7), [
+        @test all(isapprox.(round.(successive_relaxation(MVI, omega); digits=7), [
             3.0000498,  4.0002586, -5.0003486]; atol=10tol))
         ## newton_raphson
         f1(x1, x2, x3) = 3x1 - cos(x2*x3) - 0.5
@@ -112,11 +112,12 @@ using Test
         b   = zeros(length(A))
         x0  = [0.1, 0.1, -0.1]
         tol = 1e-9
-        mvi = MultiVariableIteration(A, x0, b, 5, tol)
-        @test all(isapprox.(round.(newton_raphson(mvi, variables); digits=10), [
+        MVI = MultiVariableIteration(A, x0, b, 5, tol)
+        @test all(isapprox.(round.(newton_raphson(MVI, variables); digits=10), [
             0.5000000000, -1.375e-11, -0.5235987756]; atol=10tol))
     end
     @testset "System of Equations" begin
+        # systems of equations
         A   = float.([
             [4 1 1 0 1]
             [1 3 1 1 0]
@@ -128,11 +129,36 @@ using Test
         tol = 10^-5.
         SOE = SystemOfEquation(A, b, 100, tol)
         # df = gaussian_elimination(SOE)
-        @test all(isapprox.(round.(steepest_descent(SOE, x0); digits=6), [
+        ## steepest_descent
+        @test all(isapprox.(round.(steepest_descent(SOE, x0);                           digits=6), [
             0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
-        @test all(isapprox.(round.(conjugate_gradient(SOE, x0); digits=6), [
+        ## conjugate_gradient
+        @test all(isapprox.(round.(conjugate_gradient(SOE, x0);                         digits=6), [
             0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
-        @test all(isapprox.(round.(conjugate_gradient(SOE, x0; C=diagm(0 => diag(A))); digits=6), [
+        ## conjugate_gradient (pre-conditioned)
+        @test all(isapprox.(round.(conjugate_gradient(SOE, x0, diagm(0 => diag(A)));    digits=6), [
             0.451611, 0.709681, 1.677415, 1.741933, 1.806451]; atol=10tol))
+    end
+    @testset "Eigenvalue" begin
+        # eigenvalue
+        ## (inverse_)power_method
+        A = float.([
+            [-4 14 0]
+            [-5 13 0]
+            [-1 0 2]])
+        tol = 10^-4
+        x0 = ones(size(A)[1])
+        EV = Eigenvalue(A, 100, tol)
+        @test isapprox(round(power_method(EV, x0);                  digits=6), 6.000837; atol=10tol)
+        @test isapprox(round(inverse_power_method(EV, x0, 19/3);    digits=6), 6.000017; atol=10tol)
+
+        # qr_algorithm
+        A = float.([
+            [3 1 0]
+            [1 3 1]
+            [0 1 3]])
+        tol = 10^-5
+        @test all(isapprox.(round.(qr_algorithm(Eigenvalue(A, 100, tol)); digits=5), [
+            4.41420, 3.00000, 1.58579]; atol=10tol))
     end
 end
