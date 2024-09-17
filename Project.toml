@@ -1,7 +1,7 @@
 name = "NumericalMethods"
 uuid = "154d3d63-62f4-4409-ad1c-5b6779bffd36"
 authors = ["Joby M. Anthony III"]
-version = "0.0.0-dev"
+version = "1.0.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
