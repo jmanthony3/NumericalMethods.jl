@@ -82,4 +82,10 @@ export power_method
 export inverse_power_method
 export qr_algorithm
 
+include("boundaryvalueproblem.jl")
+using .BoundaryValueProblems
+export BoundaryValueProblem
+export linear_shooting_method
+export finite_difference_method
+
 end

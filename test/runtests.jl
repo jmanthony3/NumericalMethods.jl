@@ -66,8 +66,8 @@ using Test
         @test round(integrate(y, x, rule=:simpsonN);    digits=6)       == -0.084893
         @test round(integrate(y, x, rule=:midpoint);    digits=6)       == -0.017729
     end
-    @testset "ODE/PDE" begin
-        # ODE/PDE
+    @testset "Initial-Value Problem" begin
+        # IVP
         f(t, y) = y - t^2 + 1
         a, h    = 0., 0.2
         N, α    = 10, 0.5
@@ -161,7 +161,7 @@ using Test
         @test isapprox(round(power_method(EV, x0);                  digits=6), 6.000837; atol=10tol)
         @test isapprox(round(inverse_power_method(EV, x0, 19/3);    digits=6), 6.000017; atol=10tol)
 
-        # qr_algorithm
+        ## qr_algorithm
         A = float.([
             [3 1 0]
             [1 3 1]
@@ -169,5 +169,20 @@ using Test
         tol = 10^-5
         @test all(isapprox.(round.(qr_algorithm(Eigenvalue(A, 100, tol)); digits=5), [
             4.41420, 3.00000, 1.58579]; atol=10tol))
+    end
+    @testset "Boundary-Value Problem" begin
+        # BVP
+        ## linear_shooting_method ~ finite_difference_method
+        p(x) = -x\2
+        q(x) = 2/(x^2)
+        r(x) = sin(log(x))/x^2
+        BVP = BoundaryValueProblem([p, q, r], 1., 2., 0.1, 1., 2., 10)
+        tol = 10^-6
+        @test all(isapprox.(round.([y[1] for y in linear_shooting_method(BVP)]; digits=6), [
+            1.0, 1.092629, 1.187085, 1.283382, 1.381446, 1.481159, 1.582392, 1.685014,
+            1.788898, 1.893930, 2.0]; atol=10tol))
+        @test all(isapprox.(round.(finite_difference_method(BVP; tol=tol); digits=6), [
+            1.0, 1.092600, 1.187043, 1.283337, 1.381402, 1.481120, 1.582360, 1.684989,
+            1.788882, 1.893921, 2.0]; atol=10tol))
     end
 end

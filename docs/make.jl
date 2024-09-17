@@ -26,7 +26,8 @@ makedocs(;
         "Initial-Value Problem" => "initialvalueproblem.md",
         "Multi-Variable Iteration" => "multivariableiteration.md",
         "System of Equation" => "systemofequation.md",
-        "Eigenvalue" => "eigenvalue.md"
+        "Eigenvalue" => "eigenvalue.md",
+        "Boundary-Value Problem" => "boundaryvalueproblem.md"
     ],
 )
 

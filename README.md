@@ -61,7 +61,9 @@ Key comments:
   - [ ] Runge-Kutta
     - [ ] 2ⁿᵈ-Order
     - [x] 4ᵗʰ-Order
-- [ ] Boundary Value Problems (BVP)
+- [x] Boundary Value Problems (BVP)
+  - [x] Linear Shooting Method
+  - [x] Finite Difference Method
 - [ ] Other Ordinary/Partial Differential Equations (O/PDE)
 - [ ] Decision on appropriate naming convention of types/functions/methods
 - [ ] Attributes and plot recipes for plotting approximations and respective errors by iteration

@@ -6,8 +6,7 @@ export gaussian_elimination
 export steepest_descent
 # export solve
 
-# import ..NumericalMethods: positive_definite
-using NumericalMethods: positive_definite
+import ..NumericalMethods: solve, positive_definite
 
 using LinearAlgebra
 
