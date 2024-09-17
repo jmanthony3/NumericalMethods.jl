@@ -11,6 +11,7 @@ This package provides:
   - `SingleVariableIteration`
   - `InitialValueProblem`
   - `MultiVariableIteration`
+  - `SystemofEquation`
 
 Each of the method dispatches on `solve()` include convenience functions for the respective numerical method as specified by the `method` keyword argument.
 E.g. `solve(mvi::MultiVariableIteration; method=:jacobi) ≡ jacobi(mvi)` which applies the **Jacobi Iterative Technique** onto the system of equations defined in a `MultiVariableIteration` structure.
@@ -24,7 +25,7 @@ Key comments:
   - `n1derivative()`
   - `maximum_slope()`
   - `newton_raphson()`
-- `newton_raphson()` will solve quicker if the functional form of the derivative or Jacobian matrix is supplied
+- **`newton_raphson()` will solve quicker if the functional form of the derivative or Jacobian matrix is supplied**
 
 ## Roadmap
 - [x] Single-Variable Iteration (SVI)
