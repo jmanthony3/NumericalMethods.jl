@@ -1,8 +1,17 @@
 module NumericalMethods
 
+include("exception.jl")
+export SquareMatrixError
+export SameSizeError
+export SystemOfEquationError
+export SymmetricError
+export PositiveDefiniteError
+export IntervalBoundsError
+
 include("base.jl")
 export solve
 export newton_raphson
+export issquare
 export diagonality
 export spectral_radius
 export condition_number

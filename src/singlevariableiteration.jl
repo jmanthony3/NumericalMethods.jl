@@ -8,7 +8,7 @@ export newton_raphson
 export secant_method
 export false_position
 
-import ..NumericalMethods: solve, newton_raphson
+import ..NumericalMethods: solve, newton_raphson, IntervalBoundsError
 
 # KEY: [10.1145/3511528.3511535]
 using Symbolics: @variables, Differential, simplify, expand_derivatives, build_function
@@ -111,14 +111,8 @@ function solve(SVI::SingleVariableIteration;
                 k += 1                                  # iterate to k + 1
             end
             return (k <= N && isassigned(g, k)) ? g[k] : NaN
-        # else # abort if f(a) is not opposite f(b)
-        #     if method == :bisection
-        #         error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(a = %1.4f) = %1.4f, f(b = %1.4f) = %1.4f]",
-        #             a, b, f(a), f(b)))
-        #     elseif method ∈ (:secant_method, :false_position)
-        #         error(@sprintf("Interval bounds must yield opposite signs in function, f := [f(p₀ = %1.4f) = %1.4f, f(p₁ = %1.4f) = %1.4f]",
-        #             p0, p1, f(p0), f(p1)))
-        #     end
+        else # abort if f(a) is not opposite f(b)
+            throw(IntervalBoundsError(SVI.f, SVI.a, SVI.b))
         end
     elseif method ∈ (:fixed_point, :newton_raphson)
         # determine form of derivative
@@ -152,6 +146,8 @@ function solve(SVI::SingleVariableIteration;
             p0 = p; k += 1                      # iterate to k + 1
         end
         return (k <= N && isassigned(g, k)) ? g[k] : NaN
+    else
+        throw(ArgumentError("The prescribed method must be one of the following selections: {`:bisection`, `:fixed_point`, `:newton_raphson`, `:secant_method`, `:false_position`}."))
     end
 end
 

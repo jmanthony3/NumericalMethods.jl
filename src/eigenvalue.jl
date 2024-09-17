@@ -5,7 +5,7 @@ export power_method
 export inverse_power_method
 export qr_algorithm
 
-import NumericalMethods: symmetry, tridiagonality
+import NumericalMethods: symmetry, SymmetricError, tridiagonality
 
 using LinearAlgebra
 
@@ -121,6 +121,8 @@ function qr_algorithm(EV::Eigenvalue)::Vector{Float64}
             k += 1
         end
         return last(eigenvectors)
+    else
+        throw(SymmetricError)
     end
 end
 

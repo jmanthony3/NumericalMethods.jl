@@ -6,7 +6,7 @@ export gaussian_elimination
 export steepest_descent
 # export solve
 
-import ..NumericalMethods: solve, positive_definite
+import ..NumericalMethods: solve, positive_definite, PositiveDefiniteError
 
 using LinearAlgebra
 
@@ -46,6 +46,9 @@ function gaussian_elimination(SOE::SystemOfEquation)::Vector{Float64}
             E[j,:] .= E[j,:] - mji .* E[i,:]
         end
         Aug = E
+    end
+    if Aug[n,n] == 0
+        error("No unique solution could be found.")
     end
     x = zeros(n)
     x[n] = Aug[n,n+1] / Aug[n,n]
@@ -121,6 +124,8 @@ function conjugate_gradient(SOE::SystemOfEquation,
         end
         return x
         # return (k <= N && isassigned(approximations, k)) ? approximations[k] : NaN
+    else
+        throw(PositiveDefiniteError)
     end
 end
 
@@ -156,12 +161,16 @@ function solve(SOE::SystemOfEquation;
     method  ::Symbol                                = :gaussian_elimination,
     x       ::Union{Nothing, Vector{Float64}}       = nothing,
     C       ::Union{Nothing, Bool, Matrix{Float64}} = nothing)::Vector{Float64}
-    return if method == :gaussian_elimination
-        gaussian_elimination(SOE)
-    elseif method == :steepest_descent
-        steepest_descent(SOE, x)
-    elseif method == :conjugate_gradient
-        conjugate_gradient(SOE, x, C)
+    if size(SOE.A)[1] == size(vec(SOE.b))[1]
+        return if method == :gaussian_elimination
+            gaussian_elimination(SOE)
+        elseif method == :steepest_descent
+            steepest_descent(SOE, x)
+        elseif method == :conjugate_gradient
+            conjugate_gradient(SOE, x, C)
+        end
+    else
+        throw(SystemOfEquationError(SOE.A, SOE.b))
     end
 end
 

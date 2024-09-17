@@ -9,7 +9,7 @@ export jacobi
 # export newton_raphson
 export successive_relaxation
 
-import ..NumericalMethods: solve, newton_raphson
+import ..NumericalMethods: issquare, SystemOfEquationError, solve, newton_raphson
 
 using DataFrames # KEY: [JSSv107i04]
 using LinearAlgebra
@@ -98,52 +98,56 @@ function solve(MVI::MultiVariableIteration;
         omega       ::Float64                           = 0.,
         variables   ::Union{Nothing, Tuple{Vararg{Num}}}= nothing,
         jacobian    ::Union{Nothing, Function}          = nothing)::Vector{Float64}
-    x = MVI.x
-    if method == :newton_raphson
-        J(x) = if isnothing(jacobian)
-            convert.(Float64, value.(showjacobian(jacobian_form(MVI.A, variables), x)))
-        else
-            jacobian(x)
-        end
-    elseif method == :successive_relaxation
-        if omega == 0.
-            ω = find_omega(MVI)
-        # elseif isinstance(omega, (int, float)) && omega > 0.
-        #     w = self.find_omega(omega=omega)
-        #     logging.info(f"omega = {omega} given. Which is not optimum: {w}")
-        #     w = omega
-        else
-            ω = omega
-        end
-    end
-    k, n, approximations, errors = 1, length(x), [x], [MVI.tol*10]
-    while last(errors) > MVI.tol && k <= MVI.N
-        xk = zeros(eltype(MVI.x), n)
-        for i ∈ 1:1:n
-            if method == :newton_raphson
-                g = [f(x...) for f ∈ MVI.A]
-                xk = x + (J(x) \ -g)
+    if size(MVI.A)[1] == size(vec(MVI.x))[1] == size(vec(MVI.b))[1]
+        x = MVI.x
+        if method == :newton_raphson
+            J(x) = if isnothing(jacobian)
+                convert.(Float64, value.(showjacobian(jacobian_form(MVI.A, variables), x)))
             else
-                xk[i] = (if method ∈ (:gauss_seidel, :successive_relaxation)
-                    y1 = sum([MVI.A[i, j] * xk[j] for j ∈ 1:1:i])
-                    y2 = 0.; for j ∈ i+1:1:n
-                        y2 += MVI.A[i, j] * x[j]
-                    end
-                    -y1 - y2
-                elseif method == :jacobi
-                    -sum([j != i ? MVI.A[i, j] * x[j] : 0. for j ∈ 1:1:n])
-                end + MVI.b[i]) / MVI.A[i, i]
+                jacobian(x)
+            end
+        elseif method == :successive_relaxation
+            if omega == 0.
+                ω = find_omega(MVI)
+            # elseif isinstance(omega, (int, float)) && omega > 0.
+            #     w = self.find_omega(omega=omega)
+            #     logging.info(f"omega = {omega} given. Which is not optimum: {w}")
+            #     w = omega
+            else
+                ω = omega
             end
         end
-        if method == :successive_relaxation
-            xk = [(1. - ω) * x[i] + ω * xk[i] for i ∈ 1:1:n]
+        k, n, approximations, errors = 1, length(x), [x], [MVI.tol*10]
+        while last(errors) > MVI.tol && k <= MVI.N
+            xk = zeros(eltype(MVI.x), n)
+            for i ∈ 1:1:n
+                if method == :newton_raphson
+                    g = [f(x...) for f ∈ MVI.A]
+                    xk = x + (J(x) \ -g)
+                else
+                    xk[i] = (if method ∈ (:gauss_seidel, :successive_relaxation)
+                        y1 = sum([MVI.A[i, j] * xk[j] for j ∈ 1:1:i])
+                        y2 = 0.; for j ∈ i+1:1:n
+                            y2 += MVI.A[i, j] * x[j]
+                        end
+                        -y1 - y2
+                    elseif method == :jacobi
+                        -sum([j != i ? MVI.A[i, j] * x[j] : 0. for j ∈ 1:1:n])
+                    end + MVI.b[i]) / MVI.A[i, i]
+                end
+            end
+            if method == :successive_relaxation
+                xk = [(1. - ω) * x[i] + ω * xk[i] for i ∈ 1:1:n]
+            end
+            # push!(approximations,   xk)
+            push!(errors,           norm(xk - x))
+            x = xk; k += 1 # iterate to k + 1
         end
-        # push!(approximations,   xk)
-        push!(errors,           norm(xk - x))
-        x = xk; k += 1 # iterate to k + 1
+        return x
+        # return (k <= N && isassigned(approximations, k)) ? approximations[k] : NaN
+    else
+        throw(SystemOfEquationError(MVI.A, MVI.x))
     end
-    return x
-    # return (k <= N && isassigned(approximations, k)) ? approximations[k] : NaN
 end
 
 """

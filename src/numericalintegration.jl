@@ -20,7 +20,7 @@ Dataset may contain unevenly spaces points.
 https://en.wikipedia.org/wiki/Simpson%27s_rule
 """
 function integrate(f::Union{AbstractVector{T}, Function}, x::AbstractVector{T};
-        rule::Symbol= :trapezoidal, tol::T= 10^-3)::Float64 where {T<:Real}
+        rule::Symbol=:trapezoidal, tol::T=10^-3)::Float64 where {T<:Real}
     is_function = isa(f, Function)
     @inbounds a, b, n     = first(x), last(x), length(x) - 1
     if is_function

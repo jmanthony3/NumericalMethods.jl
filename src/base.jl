@@ -3,20 +3,30 @@ using LinearAlgebra
 function newton_raphson() end
 function solve() end
 
+function issquare(A::Matrix)
+    m, n = size(A)
+    if m != n
+        throw(SquareMatrixError((m, n)))
+    end
+    return true
+end
+
 """
     diagonality(A)
 
 Determines whether matrix, `A` is strictly, diagonally dominant.
 """
 function diagonality(A::Matrix)
-    n, m    = size(A)
-    diags   = zeros(eltype(A), n, m)
-    for i ∈ 1:1:n, j ∈ 1:1:m
-        if i != j
-            diags[i, j] = A[i, j]
+    if issquare(A)
+        m, n    = size(A)
+        diags   = zeros(eltype(A), m, n)
+        for i ∈ 1:1:m, j ∈ 1:1:n
+            if i != j
+                diags[i, j] = A[i, j]
+            end
         end
+        return tr(A) >= sum(diags)
     end
-    return tr(A) >= sum(diags)
 end
 
 """
@@ -27,7 +37,7 @@ Finds the spectral radius of matrix, `A`.
 # Notes
 ``ρ(\\mathbf{A}) = \\max|λ|``, where λ is the set of eigvalsvalues for `A` [burdenNumericalAnalysis2016]_.
 """
-spectral_radius(A::Matrix, N::Int64=100, tol::Real=10^-6)   = maximum(abs.(if issymmetric(A) && tridiagonality(A)
+spectral_radius(A::Matrix, N::Int64=100, tol::Real=10^-6)   = maximum(abs.(if issquare(A) && issymmetric(A) && tridiagonality(A)
     qr_algorithm(Eigenvalue(A, N, tol))
 else
     eigvals(A)
@@ -57,20 +67,21 @@ condition_number(A::Matrix) = norm(A) * norm(inv(A))
 Determines whether matrix, `A` is symmetric.
 """
 function symmetry(A::Matrix)
-    At, is_symmetric = transpose(A), false
-    i = 1; for ai ∈ A
-        j = 1; for aj ∈ ai
-            if aj == At[i, j]
-                is_symmetric = true
-            else
-                is_symmetric = false
-                return is_symmetric
+    if issquare(A)
+        At, is_symmetric = transpose(A), false
+        i = 1; for ai ∈ A
+            j = 1; for aj ∈ ai
+                if aj == At[i, j]
+                    is_symmetric = true
+                else
+                    return false
+                end
+                j += 1
             end
-            j += 1
+            i += 1
         end
-        i += 1
+        return is_symmetric
     end
-    return is_symmetric
 end
 
 """

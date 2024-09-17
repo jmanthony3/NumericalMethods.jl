@@ -5,6 +5,7 @@ Documentation for [NumericalMethods](https://github.com/jmanthony3/NumericalMeth
 Modules = [NumericalMethods]
 Pages   = [
     "base.md",
+    "exception.md",
     "singlevariableiteration.md",
     "interpolation.md",
     "numericaldifferentiation.md",
@@ -33,6 +34,7 @@ Modules = [
     NumericalMethods.BoundaryValueProblems]
 Pages   = [
     "base.md",
+    "exception.md",
     "singlevariableiteration.md",
     "interpolation.md",
     "numericaldifferentiation.md",

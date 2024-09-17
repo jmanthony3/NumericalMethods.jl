@@ -19,6 +19,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Base" => "base.md",
+        "Exception" => "exception.md",
         "Single-Variable Iteration" => "singlevariableiteration.md",
         "Interpolation" => "interpolation.md",
         "Numerical Differentiation" => "numericaldifferentiation.md",
