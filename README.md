@@ -40,6 +40,7 @@ Key comments:
   - [ ] Hermite Polynomials
   - [x] Linear Least Squares
   - [x] Bezier Curves
+  - [ ] Newton's Divided Difference
 - [ ] Extrapolation methods
   - [ ] Richardson's Extrapolation
 - [x] Solving for eigenvalues
@@ -66,6 +67,7 @@ Key comments:
   - [x] Finite Difference Method
 - [ ] Other Ordinary/Partial Differential Equations (O/PDE)
 - [ ] Decision on appropriate naming convention of types/functions/methods
+- [ ] Expand base methods for other linear algebraic properties and convenience functions
 - [ ] Attributes and plot recipes for plotting approximations and respective errors by iteration
 
 ## Citing
