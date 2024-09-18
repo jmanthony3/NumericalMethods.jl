@@ -17,10 +17,9 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
-julia = "1.10"
 DataFrames = "1.6.1"
 Documenter = "1.7.0"
-IntervalArithmetic = "0.20.9"
+IntervalArithmetic = "0.20.9, 0.22"
 IntervalRootFinding = "0.5.11"
 PkgBenchmark = "0.2.12"
 Polynomials = "3.2.13"
@@ -28,6 +27,7 @@ Revise = "3.5.18"
 StaticArrays = "1.9.7"
 Statistics = "1.10.0"
 Symbolics = "6.11.0"
+julia = "1.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
