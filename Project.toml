@@ -33,7 +33,7 @@ Revise = "3.5.18"
 StaticArrays = "1.9.7"
 Statistics = "1.10.0"
 Suppressor = "0.2.8"
-Symbolics = "6.11.0"
+Symbolics = "^6.11.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
