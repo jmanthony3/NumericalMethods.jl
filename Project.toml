@@ -1,9 +1,10 @@
 name = "NumericalMethods"
 uuid = "154d3d63-62f4-4409-ad1c-5b6779bffd36"
 authors = ["Joby M. Anthony III"]
-version = "1.0.0"
+version = "0.0.0-dev"
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
@@ -11,23 +12,28 @@ IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
 Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
+julia = "1.10"
+BenchmarkTools = "1.5.0"
 DataFrames = "1.6.1"
 Documenter = "1.7.0"
 IntervalArithmetic = "0.20.9, 0.22"
 IntervalRootFinding = "0.5.11"
 PkgBenchmark = "0.2.12"
 Polynomials = "3.2.13"
+PyCall = "1.96.4"
 Revise = "3.5.18"
 StaticArrays = "1.9.7"
 Statistics = "1.10.0"
-Symbolics = "6.11.0"
-julia = "1.10"
+Suppressor = "0.2.8"
+Symbolics = "^6.11.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
