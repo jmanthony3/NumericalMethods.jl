@@ -5,6 +5,13 @@
 [![Build Status](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Documentation](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/Documentation.yml/badge.svg)](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/Documentation.yml)
 
+Currently unregistered.
+If one wants to use this package, then execute
+```julia
+using Pkg; Pkg.add(url="https://github.com/jmanthony3/NumericalMethods.jl")
+```
+in the Julia REPL.
+
 This package provides:
 - Native Julia implementation of some numerical methods from the 10ᵗʰ edition of _Numerical Analysis_ by Burden et al.
 - `solve()` includes method dispatching for the following types:

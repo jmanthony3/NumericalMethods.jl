@@ -1,5 +1,7 @@
 /Manifest.toml
 /benchmark/tune.json
 /benchmark/results.json
+/benchmark/results-compare.json
+/benchmark/results-compare.md
 /docs/Manifest.toml
 /docs/build/
