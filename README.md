@@ -1,14 +1,14 @@
-# NumericalMethods
+# LUSE_ENGR701_704_NumericalMethods
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jmanthony3.github.io/NumericalMethods.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://jmanthony3.github.io/NumericalMethods.jl/dev/)
-[![Build Status](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Documentation](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/Documentation.yml/badge.svg)](https://github.com/jmanthony3/NumericalMethods.jl/actions/workflows/Documentation.yml)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jmanthony3.github.io/LUSE_ENGR701_704_NumericalMethods.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://jmanthony3.github.io/LUSE_ENGR701_704_NumericalMethods.jl/dev/)
+[![Build Status](https://github.com/jmanthony3/LUSE_ENGR701_704_NumericalMethods.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jmanthony3/LUSE_ENGR701_704_NumericalMethods.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Documentation](https://github.com/jmanthony3/LUSE_ENGR701_704_NumericalMethods.jl/actions/workflows/Documentation.yml/badge.svg)](https://github.com/jmanthony3/LUSE_ENGR701_704_NumericalMethods.jl/actions/workflows/Documentation.yml)
 
 Currently unregistered.
 If one wants to use this package, then execute
 ```julia
-using Pkg; Pkg.add(url="https://github.com/jmanthony3/NumericalMethods.jl")
+using Pkg; Pkg.add(url="https://github.com/jmanthony3/LUSE_ENGR701_704_NumericalMethods.jl")
 ```
 in the Julia REPL.
 

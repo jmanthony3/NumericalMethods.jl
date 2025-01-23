@@ -1,18 +1,18 @@
 using Pkg; Pkg.precompile()
 using Documenter
-using NumericalMethods
+using LUSE_ENGR701_704_NumericalMethods
 
-DocMeta.setdocmeta!(NumericalMethods, :DocTestSetup, :(using NumericalMethods); recursive=true)
+DocMeta.setdocmeta!(LUSE_ENGR701_704_NumericalMethods, :DocTestSetup, :(using LUSE_ENGR701_704_NumericalMethods); recursive=true)
 
 makedocs(;
-    modules=[NumericalMethods],
+    modules=[LUSE_ENGR701_704_NumericalMethods],
     authors="Joby M. Anthony III",
-    repo="https://github.com/jmanthony3/NumericalMethods.jl/blob/{commit}{path}#{line}",
-    sitename="NumericalMethods.jl",
+    repo="https://github.com/jmanthony3/LUSE_ENGR701_704_NumericalMethods.jl/blob/{commit}{path}#{line}",
+    sitename="LUSE_ENGR701_704_NumericalMethods.jl",
     doctest=false,
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://jmanthony3.github.io/NumericalMethods.jl",
+        canonical="https://jmanthony3.github.io/LUSE_ENGR701_704_NumericalMethods.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -33,6 +33,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/jmanthony3/NumericalMethods.jl",
+    repo="github.com/jmanthony3/LUSE_ENGR701_704_NumericalMethods.jl",
     devbranch="main",
 )

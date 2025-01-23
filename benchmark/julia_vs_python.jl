@@ -1,5 +1,5 @@
 using BenchmarkTools
-using NumericalMethods
+using LUSE_ENGR701_704_NumericalMethods
 using PyCall
 using Suppressor
 

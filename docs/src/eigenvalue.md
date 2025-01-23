@@ -1,7 +1,7 @@
 # Eigenvalue
 
 ```@meta
-CurrentModule = NumericalMethods.Eigenvalues
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.Eigenvalues
 ```
 
 ## Types

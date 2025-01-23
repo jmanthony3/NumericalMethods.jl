@@ -6,7 +6,7 @@ export gaussian_elimination
 export steepest_descent
 # export solve
 
-import ..NumericalMethods: solve, positive_definite, PositiveDefiniteError
+import ..LUSE_ENGR701_704_NumericalMethods: solve, positive_definite, PositiveDefiniteError
 
 using LinearAlgebra
 

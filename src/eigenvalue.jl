@@ -5,7 +5,7 @@ export power_method
 export inverse_power_method
 export qr_algorithm
 
-import NumericalMethods: symmetry, SymmetricError, tridiagonality
+import LUSE_ENGR701_704_NumericalMethods: symmetry, SymmetricError, tridiagonality
 
 using LinearAlgebra
 

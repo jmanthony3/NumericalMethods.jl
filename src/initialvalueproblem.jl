@@ -8,7 +8,7 @@ export improved_euler
 export modified_euler
 export runge_kutta
 
-import ..NumericalMethods: solve
+import ..LUSE_ENGR701_704_NumericalMethods: solve
 
 using StaticArrays
 

@@ -1,7 +1,7 @@
 # Initial-Value Problem
 
 ```@meta
-CurrentModule = NumericalMethods.InitialValueProblems
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.InitialValueProblems
 ```
 
 ## Types

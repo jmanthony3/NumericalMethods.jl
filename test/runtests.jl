@@ -1,9 +1,9 @@
 using LinearAlgebra: diag, diagm
-using NumericalMethods
+using LUSE_ENGR701_704_NumericalMethods
 using Symbolics: @variables # KEY: [10.1145/3511528.3511535]
 using Test
 
-@testset verbose=true "NumericalMethods.jl" begin
+@testset verbose=true "LUSE_ENGR701_704_NumericalMethods.jl" begin
     @testset "Single-Variable Iteration" begin
         # single-variable iteration
         f(x)    = x^3 + 4x^2 - 10

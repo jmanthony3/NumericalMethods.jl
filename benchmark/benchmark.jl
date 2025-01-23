@@ -1,4 +1,4 @@
 using PkgBenchmark
-using NumericalMethods
+using LUSE_ENGR701_704_NumericalMethods
 
-benchmarkpkg(NumericalMethods; resultfile="results.json")
+benchmarkpkg(LUSE_ENGR701_704_NumericalMethods; resultfile="results.json")

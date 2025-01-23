@@ -9,7 +9,7 @@ export jacobi
 # export newton_raphson
 export successive_relaxation
 
-import ..NumericalMethods: issquare, SystemOfEquationError, solve, newton_raphson
+import ..LUSE_ENGR701_704_NumericalMethods: issquare, SystemOfEquationError, solve, newton_raphson
 
 using DataFrames # KEY: [JSSv107i04]
 using LinearAlgebra

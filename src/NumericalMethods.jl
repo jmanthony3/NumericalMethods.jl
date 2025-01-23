@@ -1,4 +1,4 @@
-module NumericalMethods
+module LUSE_ENGR701_704_NumericalMethods
 
 include("exception.jl")
 export SquareMatrixError

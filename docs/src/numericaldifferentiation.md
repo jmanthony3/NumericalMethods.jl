@@ -1,7 +1,7 @@
 # Numerical Differentiation
 
 ```@meta
-CurrentModule = NumericalMethods.Derivatives
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.Derivatives
 ```
 
 ## Functions

@@ -1,7 +1,7 @@
 # Interpolation
 
 ```@meta
-CurrentModule = NumericalMethods.Interpolations
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.Interpolations
 ```
 
 ## Functions

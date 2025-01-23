@@ -1,7 +1,7 @@
 # Single-Variable Iteration
 
 ```@meta
-CurrentModule = NumericalMethods.SingleVariableIterations
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.SingleVariableIterations
 ```
 
 ## Types

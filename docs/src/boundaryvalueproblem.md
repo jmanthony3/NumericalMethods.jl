@@ -1,7 +1,7 @@
 # Boundary-Value Problem
 
 ```@meta
-CurrentModule = NumericalMethods.BoundaryValueProblems
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.BoundaryValueProblems
 ```
 
 ## Types

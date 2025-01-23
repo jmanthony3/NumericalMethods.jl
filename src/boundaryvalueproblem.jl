@@ -5,7 +5,7 @@ export BoundaryValueProblem
 export linear_shooting_method
 export finite_difference_method
 
-import ..NumericalMethods: solve, SystemOfEquation
+import ..LUSE_ENGR701_704_NumericalMethods: solve, SystemOfEquation
 
 using LinearAlgebra
 

@@ -8,7 +8,7 @@ export newton_raphson
 export secant_method
 export false_position
 
-import ..NumericalMethods: solve, newton_raphson, IntervalBoundsError
+import ..LUSE_ENGR701_704_NumericalMethods: solve, newton_raphson, IntervalBoundsError
 
 # KEY: [10.1145/3511528.3511535]
 using Symbolics: @variables, Differential, simplify, expand_derivatives, build_function

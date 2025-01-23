@@ -1,7 +1,7 @@
 # System of Equation
 
 ```@meta
-CurrentModule = NumericalMethods.SystemOfEquations
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.SystemOfEquations
 ```
 
 ## Types

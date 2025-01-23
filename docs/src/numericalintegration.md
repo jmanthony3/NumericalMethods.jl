@@ -1,7 +1,7 @@
 # Numerical Integration
 
 ```@meta
-CurrentModule = NumericalMethods.Integrations
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.Integrations
 ```
 
 ## Functions

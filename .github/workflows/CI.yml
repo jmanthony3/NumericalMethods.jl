@@ -58,6 +58,6 @@ jobs:
   #       shell: julia --project=docs --color=yes {0}
   #       run: |
   #         using Documenter: DocMeta, doctest
-  #         using NumericalMethods
-  #         DocMeta.setdocmeta!(NumericalMethods, :DocTestSetup, :(using NumericalMethods); recursive=true)
-  #         doctest(NumericalMethods)
+  #         using LUSE_ENGR701_704_NumericalMethods
+  #         DocMeta.setdocmeta!(LUSE_ENGR701_704_NumericalMethods, :DocTestSetup, :(using LUSE_ENGR701_704_NumericalMethods); recursive=true)
+  #         doctest(LUSE_ENGR701_704_NumericalMethods)

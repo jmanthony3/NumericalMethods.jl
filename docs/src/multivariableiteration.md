@@ -1,7 +1,7 @@
 # Multi-Variable Iteration
 
 ```@meta
-CurrentModule = NumericalMethods.MultiVariableIterations
+CurrentModule = LUSE_ENGR701_704_NumericalMethods.MultiVariableIterations
 ```
 
 ## Types
